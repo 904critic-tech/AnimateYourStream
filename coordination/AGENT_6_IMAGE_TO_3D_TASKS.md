@@ -7,8 +7,8 @@
 ## Phase 0 — Enablement
 - [x] Add feature flag: `VITE_ENABLE_IMAGE_TO_3D=true`
 - [x] Right Panel: add a new section (behind flag) "Create 3D from Image" with disabled controls (stub)
-- [ ] Create directory structure: `public/uploads/images/`, `public/Default_Characters/generated/`
-  - Notes: Planning `.gitkeep` and manifest auto-refresh after MVP script
+- [x] Create directory structure: `public/uploads/images/`, `public/Default_Characters/generated/`
+  - Notes: `.gitkeep` added; MVP script outputs under `generated/<slug>/`
 
 ## Phase 1 — MVP (Single Image → Quick Preview, Automated)
 - [ ] Script: `scripts/image_to_3d/single_image_mvp.cjs` (Node CLI)
@@ -36,6 +36,7 @@
 
 ## UI Integration
 - [x] Right Panel uploader (single image or folder) — stubbed, disabled behind flag
+- [x] Builder MVP hook (feature gated) — upload calls `POST /api/image3d/mvp` when flag is enabled
 - [ ] Pipeline status UI (Queued → Processing → Rigging → Animating → Done)
 - [ ] On success: add to characters, select and load automatically
 - [ ] On failure: clear messages and logs; allow retry
