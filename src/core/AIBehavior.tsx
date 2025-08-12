@@ -356,6 +356,35 @@ export function AIBehavior({
     behaviorTreeRef.current = new BehaviorTree(root)
   }, [aiBehaviorEnabled, config, aiState.personality])
 
+  // Keep personality preset in sync with store
+  useEffect(() => {
+    if (!personalitySystemRef.current) return
+    const presetMap: Record<string, PersonalityType | undefined> = {
+      friendly: PersonalityType.FRIENDLY,
+      shy: PersonalityType.SHY,
+      excited: PersonalityType.EXCITED,
+      calm: PersonalityType.CALM,
+      playful: PersonalityType.PLAYFUL,
+      serious: PersonalityType.SERIOUS,
+      curious: PersonalityType.CURIOUS,
+      confident: PersonalityType.CONFIDENT,
+      energetic: PersonalityType.EXCITED,
+      balanced: PersonalityType.CALM,
+      creative: PersonalityType.PLAYFUL,
+      conservative: PersonalityType.SERIOUS
+    }
+    const mapped = presetMap[aiPersonalityPreset]
+    if (mapped) {
+      // PersonalitySystem uses its own enum; map by name
+      try {
+        // @ts-ignore access to internal setter via matching enum name
+        personalitySystemRef.current.setPreset(mapped.toLowerCase?.() || mapped)
+      } catch {
+        // fallback: ignore
+      }
+    }
+  }, [aiPersonalityPreset])
+
   // Update environmental context
   const updateEnvironmentalContext = useCallback(() => {
     const now = Date.now()
