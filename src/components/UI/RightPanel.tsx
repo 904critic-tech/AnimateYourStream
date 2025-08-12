@@ -50,6 +50,9 @@ function RightPanel() {
 
   const availableAnimations = (animationInfo.availableAnimations || []) as string[]
   const filteredAnimations = availableAnimations.filter(name => name.toLowerCase().includes(searchTerm.toLowerCase()))
+ 
+  const aiSuggestionHistory = useAppStore(s => s.aiSuggestionHistory)
+  const lastSuggestions = aiSuggestionHistory.slice(-5).reverse()
 
   const selectAnimation = (animationName: string) => {
     setCurrentAnimation(animationName)
@@ -256,6 +259,23 @@ function RightPanel() {
             </button>
           </div>
         </div>
+      </div>
+ 
+      {/* AI Suggestions (read-only) */}
+      <div className="px-3 py-2 text-xs text-secondary-300 border-b border-secondary-700">
+        <div className="flex items-center gap-2">
+          <Brain className="w-4 h-4 text-primary-400" />
+          <span className="font-semibold text-white">AI Suggestions</span>
+        </div>
+        {lastSuggestions.length === 0 ? (
+          <div className="mt-1 text-secondary-400">No suggestions yet</div>
+        ) : (
+          <ul className="mt-1 space-y-0.5">
+            {lastSuggestions.map((s, idx) => (
+              <li key={idx} className="text-secondary-200">• {s}</li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Sandbox Controls */}
