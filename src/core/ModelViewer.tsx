@@ -425,8 +425,12 @@ function CharacterLoader({
               return {
                 model: fbxResult.model,
                 animations: fbxResult.animations || [],
-                mixer: fbxResult.mixer
-              }
+                mixer: fbxResult.mixer,
+                // Pass through memory metrics for diagnostics
+                memoryUsage: fbxResult.memoryUsage,
+                loadingTime: fbxResult.loadingTime,
+                performance: fbxResult.performance
+              } as any
             } catch (error) {
               console.error(`⚡ Agent 2: FBX loading failed for ${url}:`, error)
               
