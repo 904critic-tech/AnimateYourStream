@@ -56,6 +56,7 @@
 | 2025-08-12 19:47:00 | Agent 4 | 🔍 Main App Mic Toggle (post-UI tweak) | ✅ PASS | `node scripts/agent4_toggle_mic_in_main_app.cjs` → HTTP 200; frameCount≈11; level≈0.069; processing=true |
 | 2025-08-12 19:52:00 | Agent 4 | 🔔 Verify enhancedAudioData event (read-only) | ✅ PASS | `node scripts/agent4_verify_enhanced_audio_event.cjs` → HTTP 200; event received with metrics.rms present |
 | 2025-08-12 19:57:00 | Agent 4 | ⛔ Toggle Mic OFF + Verify Reset (read-only) | ✅ PASS | `node scripts/agent4_toggle_off_and_verify_reset.cjs` → HTTP 200; isProcessing=false; last audioLevel event=0 |
+| 2025-08-12 20:01:00 | Agent 4 | 🖥️ Verify UI Mic-Off Label (read-only) | ✅ PASS | `node scripts/agent4_verify_ui_mic_off_label.cjs` → HTTP 200; label='Audio Level (Mic off)'; percent='0%' |
 
 ---
 

@@ -369,3 +369,9 @@
 - **Result:** ✅ PASS — isProcessing=false; last audioLevel event=0
 - **Server Interaction:** Logged in `SERVER_STATUS_TRACKER.md`
 
+### 2025-08-12 20:02 - Agent 4 UI Mic-Off Label Verified
+- **Agent:** Agent 4 (Lip Sync Engineering Team)
+- **Action:** Automated check confirmed `RightPanel` shows “Audio Level (Mic off)” and 0% when mic is disabled
+- **Result:** ✅ PASS — UI reflects mic-off state
+- **Server Interaction:** Logged in `SERVER_STATUS_TRACKER.md`
+
