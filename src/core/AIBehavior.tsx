@@ -14,6 +14,8 @@ import { AIBehaviorSystem } from '../ai/AIBehaviorSystem'
 import { AnimationDecisionEngine } from '../ai/AnimationDecisionEngine'
 import { ContextAnalyzer } from '../ai/ContextAnalyzer'
 import { PersonalityEngine } from '../ai/PersonalityEngine'
+import { PersonalitySystem } from './PersonalitySystem'
+import { EnvironmentAwareness } from './EnvironmentAwareness'
 
 // Character personality types
 export enum PersonalityType {
@@ -147,13 +149,17 @@ export function AIBehavior({
     animationSpeed,
     lastInteraction,
     aiSuggestionHistory,
-    setAiBehaviorEnabled
+    setAiBehaviorEnabled,
+    addAiSuggestion
   } = useAppStore()
 
   // AI system references
   const aiBehaviorSystemRef = useRef<AIBehaviorSystem | null>(null)
   const personalityEngineRef = useRef<PersonalityEngine | null>(null)
   const contextAnalyzerRef = useRef<ContextAnalyzer | null>(null)
+  const personalitySystemRef = useRef<PersonalitySystem | null>(null)
+  const envAwarenessRef = useRef<EnvironmentAwareness | null>(null)
+  const lastSuggestionTimeRef = useRef<number>(0)
 
   // Personality-based behavior patterns
   const personalityPatterns = useMemo(() => new Map<PersonalityType, any>([
@@ -312,6 +318,12 @@ export function AIBehavior({
       enableAudioAnalysis: true
     })
 
+    if (!personalitySystemRef.current) {
+      personalitySystemRef.current = new PersonalitySystem({})
+    }
+    if (!envAwarenessRef.current) {
+      envAwarenessRef.current = new EnvironmentAwareness()
+    }
   }, [aiBehaviorEnabled, config, aiState.personality])
 
   // Update environmental context
@@ -497,6 +509,39 @@ export function AIBehavior({
         lastDecisionTime.current = now
       }
     }
+
+    // Throttled personality-based suggestion logging (every 4s)
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now()
+    if (now - lastSuggestionTimeRef.current < 4000) return
+
+    const available = aiState
+      ? (Array.isArray((useAppStore.getState().animationInfo?.availableAnimations))
+          ? useAppStore.getState().animationInfo.availableAnimations
+          : [])
+      : []
+
+    if (available.length === 0 || !personalitySystemRef.current || !envAwarenessRef.current) {
+      lastSuggestionTimeRef.current = now
+      return
+    }
+
+    const snapshot = envAwarenessRef.current.getSnapshot({
+      audioLevel: useAppStore.getState().audioLevel,
+      animationSpeed: useAppStore.getState().animationSpeed
+    })
+
+    const suggestions = personalitySystemRef.current.suggestAnimations(available, snapshot)
+    const top = suggestions[0]
+    if (top) {
+      addAiSuggestion(top.name)
+      if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') {
+        try {
+          window.dispatchEvent(new CustomEvent('ai:suggestion', { detail: { name: top.name, weight: top.weight } }))
+        } catch {}
+      }
+    }
+
+    lastSuggestionTimeRef.current = now
   })
 
   // Expose AI behavior methods globally for debugging

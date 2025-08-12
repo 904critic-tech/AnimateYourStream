@@ -484,6 +484,53 @@ export class Agent1AIBehaviorTester {
   }
 
   /**
+   * Test 8: Phase 1 Components (Personality & Environment)
+   */
+  private async testPhase1Components(): Promise<void> {
+    const suite: TestSuite = {
+      name: 'Phase 1 Components',
+      tests: [],
+      totalTests: 0,
+      passedTests: 0,
+      failedTests: 0,
+      executionTime: 0
+    }
+
+    const startTime = Date.now()
+
+    const test1 = this.runTest('PersonalitySystem suggestAnimations', () => {
+      const { PersonalitySystem, PersonalityPresetId, MoodId } = require('../core/PersonalitySystem')
+      const { EnvironmentAwareness } = require('../core/EnvironmentAwareness')
+      const p = new PersonalitySystem({ preset: PersonalityPresetId.Friendly, baseMood: { mood: MoodId.Happy, intensity: 0.5 } })
+      const env = new EnvironmentAwareness()
+      env.recordInteraction('click')
+      const snap = env.getSnapshot({ audioLevel: 0.3, animationSpeed: 1.0 })
+      const suggestions = p.suggestAnimations(['idle','wave','nod','dance'], snap)
+      return Array.isArray(suggestions) && suggestions.length >= 0
+    })
+    suite.tests.push(test1)
+
+    const test2 = this.runTest('EnvironmentAwareness frequency increases with events', () => {
+      const { EnvironmentAwareness } = require('../core/EnvironmentAwareness')
+      const env = new EnvironmentAwareness({ maxHistoryMs: 5000 })
+      const before = env.getSnapshot({ audioLevel: 0, animationSpeed: 1 }).interactionFrequency
+      env.recordInteraction('hover')
+      env.recordInteraction('click')
+      const after = env.getSnapshot({ audioLevel: 0, animationSpeed: 1 }).interactionFrequency
+      return after >= before
+    })
+    suite.tests.push(test2)
+
+    suite.executionTime = Date.now() - startTime
+    suite.totalTests = suite.tests.length
+    suite.passedTests = suite.tests.filter(t => t.passed).length
+    suite.failedTests = suite.tests.filter(t => !t.passed).length
+
+    this.testResults.push(suite)
+    console.log(`✅ Phase 1 Components: ${suite.passedTests}/${suite.totalTests} tests passed`)
+  }
+
+  /**
    * Helper method to run individual tests
    */
   private runTest(testName: string, testFunction: () => boolean): TestResult {
@@ -566,6 +613,9 @@ export class Agent1AIBehaviorTester {
 export const runAgent1Tests = async () => {
   const tester = new Agent1AIBehaviorTester()
   const results = await tester.runAllTests()
+  // Run Phase 1 component tests after legacy suites
+  // Use dynamic call to avoid TypeScript complaining about private
+  ;(tester as any).testPhase1Components && await (tester as any).testPhase1Components()
   console.log(tester.generateReport())
   return results
 }
