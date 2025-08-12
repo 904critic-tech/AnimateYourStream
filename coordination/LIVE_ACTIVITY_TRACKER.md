@@ -345,3 +345,9 @@
 - **Result:** ✅ PASS — `audioLevel` ≈ 13.5%
 - **Server Interaction:** Logged in `SERVER_STATUS_TRACKER.md`
 
+### 2025-08-12 19:42 - Agent 4 Main App Mic Toggle Verified
+- **Agent:** Agent 4 (Lip Sync Engineering Team)
+- **Action:** Automated test toggled mic in main app, subscribed to `audioLevel`, and checked processing stats
+- **Result:** ✅ PASS — frameCount > 0, lastLevel > 0, processing=true
+- **Server Interaction:** Logged in `SERVER_STATUS_TRACKER.md`
+
