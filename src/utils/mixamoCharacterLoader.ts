@@ -602,9 +602,16 @@ export async function loadCharacterWithMixamo(
   characterId: string,
   onProgress?: (progress: MixamoLoadingProgress) => void
 ): Promise<MixamoLoadResult> {
+  try {
+    console.log(`⚡ Agent 2: Loading character with Mixamo-compatible system: ${characterId}`)
+  } catch {}
   const loader = createMixamoCharacterLoader()
   try {
-    return await loader.loadCharacter(characterId, onProgress)
+    const result = await loader.loadCharacter(characterId, onProgress)
+    try {
+      console.log(`⚡ Agent 2: Mixamo-compatible loading completed for ${characterId}`)
+    } catch {}
+    return result
   } finally {
     loader.dispose()
   }
