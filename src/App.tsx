@@ -20,23 +20,21 @@ function LoadingScreen() {
     setIsLoading(false)
   }, [setIsLoading])
   
-  return (
-    <div className="fixed inset-0 bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center z-50">
-      <div className="text-center text-white">
-        <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <h1 className="text-2xl font-bold mb-2">AnimateYourStream</h1>
-        <p className="text-lg opacity-90 mb-6">Loading 3D Environment...</p>
-        
-        {/* Manual override button */}
-        <button
-          onClick={handleManualDismiss}
-          className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors text-sm"
-        >
-          Continue to App
-        </button>
+    return (
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center z-50">
+        <div className="text-center text-white">
+          <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h1 className="text-2xl font-bold mb-2">AnimateYourStream</h1>
+          <p className="text-lg opacity-90 mb-6">Loading 3D Environment...</p>
+          <button
+            onClick={handleManualDismiss}
+            className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors text-sm"
+          >
+            Continue
+          </button>
+        </div>
       </div>
-    </div>
-  )
+    )
 }
 
 function App() {
@@ -45,6 +43,14 @@ function App() {
   const [isInitialized, setIsInitialized] = useState(false)
   const [showMicrophoneTest, setShowMicrophoneTest] = useState(false)
   const [systemsInitialized, setSystemsInitialized] = useState(false)
+
+  // Absolute fallback: ensure loader never persists more than 3s on first load (production-safe)
+  useEffect(() => {
+    const hardTimeout = setTimeout(() => {
+      setIsLoading(false)
+    }, 3000)
+    return () => clearTimeout(hardTimeout)
+  }, [setIsLoading])
 
   // Feature flagged Viewer (Beta) route
   const enableViewerBeta = useMemo(() => {
@@ -95,12 +101,15 @@ function App() {
     }
   }, [])
 
-  // Initialize default character if none is set (only once)
+  // Ensure app initialization runs exactly once, regardless of currentModel preset
   useEffect(() => {
-    if (!currentModel && !isInitialized) {
-      setCurrentModel('char1') // Set Business Person as default
+    if (!isInitialized) {
+      if (!currentModel) {
+        setCurrentModel('elmo')
+        console.log('🎭 Agent 1: Default character initialized to Elmo')
+      }
       setIsInitialized(true)
-      console.log('🎭 Agent 1: Default character (Business Person) initialized')
+      console.log('🎭 Agent 1: App initialization flag set')
     }
   }, [currentModel, setCurrentModel, isInitialized])
 

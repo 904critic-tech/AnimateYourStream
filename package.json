@@ -20,10 +20,15 @@
     "manifest:characters": "node scripts/generate_character_manifest.cjs",
     "post-ingest": "npm run manifest:characters",
     "builder:serve": "node scripts/server/build_service.cjs",
+    "license:init": "node scripts/licenses/init_keys.cjs",
+    "license:gen": "node scripts/licenses/generate_code.cjs",
+    "license:gen:7": "pwsh -File scripts/licenses/Generate-7day-Code.ps1",
+    "license:gen:30": "pwsh -File scripts/licenses/Generate-30day-Code.ps1",
     "agent:watch:lint": "eslint . --ext ts,tsx --cache --cache-location .tmp/eslint | cat",
     "agent:watch:typecheck": "tsc --noEmit --watch",
     "agent:monitor:builder": "node scripts/server/ping_builder_health.cjs",
-    "agents:start": "concurrently -n lint,typecheck,builder -c yellow,cyan,magenta \"npm:agent:watch:lint\" \"npm:agent:watch:typecheck\" \"npm:agent:monitor:builder\""
+    "agents:start": "concurrently -n lint,typecheck,builder -c yellow,cyan,magenta \"npm:agent:watch:lint\" \"npm:agent:watch:typecheck\" \"npm:agent:monitor:builder\"",
+    "vercel-build": "vite build"
   },
   "bin": {},
   "scriptsExt": {},
