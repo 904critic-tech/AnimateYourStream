@@ -14,6 +14,7 @@
 import { FBXLoader, GLTFLoader, OBJLoader } from 'three-stdlib'
 import { Group, AnimationMixer, AnimationClip, Box3, Vector3, Mesh } from 'three'
 import { withFetchContextFix } from './fetchContextFix'
+import { createSafeLoader } from './fetchContextFix'
 
 export interface MixamoCharacterData {
   id: string
@@ -57,9 +58,9 @@ export class MixamoCharacterLoader {
 
   constructor() {
     // Initialize loaders with Mixamo-compatible settings
-    this.fbxLoader = new FBXLoader()
-    this.gltfLoader = new GLTFLoader()
-    this.objLoader = new OBJLoader()
+    this.fbxLoader = createSafeLoader(FBXLoader)()
+    this.gltfLoader = createSafeLoader(GLTFLoader)()
+    this.objLoader = createSafeLoader(OBJLoader)()
     
     // Configure for Mixamo compatibility
     this.configureLoaders()

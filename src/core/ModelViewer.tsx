@@ -433,8 +433,8 @@ function CharacterLoader({
               // Try fallback to direct FBX loader for regular URLs
               console.log(`⚡ Agent 2: Trying fallback direct FBX loader for ${url}`)
               try {
-                const fallbackResult = await new Promise<{ model: Group; animations: AnimationClip[]; mixer?: AnimationMixer }>((resolve, reject) => {
-                  const loader = new FBXLoader()
+                const fallbackResult = await withFetchContextFix(async () => new Promise<{ model: Group; animations: AnimationClip[]; mixer?: AnimationMixer }>((resolve, reject) => {
+                  const loader = createSafeLoader(FBXLoader)()
                   loader.load(
                     url,
                     (object: Group) => {
@@ -451,7 +451,7 @@ function CharacterLoader({
                       reject(error)
                     }
                   )
-                })
+                }))
                 
                 return fallbackResult
               } catch (fallbackError) {
@@ -658,9 +658,9 @@ function CharacterLoader({
                 })
               })
             } else {
-              // For regular URLs, use standard OBJ loader
-              return new Promise((resolve, reject) => {
-                const loader = new OBJLoader()
+              // For regular URLs, still use safe loader under fetch fix to avoid context issues on some browsers
+              return withFetchContextFix(async () => new Promise((resolve, reject) => {
+                const loader = createSafeLoader(OBJLoader)()
                 loader.load(
                   url,
                   (obj: any) => {
@@ -691,7 +691,7 @@ function CharacterLoader({
                     handleError(error)
                   }
                 )
-                            })
+              }))
             }
           })
 

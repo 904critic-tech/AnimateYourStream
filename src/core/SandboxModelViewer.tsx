@@ -94,8 +94,8 @@ export default function SandboxModelViewer({ onModelLoaded }: SandboxModelViewer
   
   // Initialize loaders
   useEffect(() => {
-    fbxLoader.current = new FBXLoader()
-    gltfLoader.current = new GLTFLoader()
+    fbxLoader.current = createSafeLoader(FBXLoader)()
+    gltfLoader.current = createSafeLoader(GLTFLoader)()
     try {
       // Configure DRACO and KTX2 decoders to mirror sandbox capabilities
       const draco = new DRACOLoader()
