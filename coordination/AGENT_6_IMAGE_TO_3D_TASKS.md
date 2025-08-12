@@ -5,9 +5,10 @@
 - Any manual rigs are optional, collected offline for improving autorig heuristics only.
 
 ## Phase 0 — Enablement
-- [ ] Add feature flag: `VITE_ENABLE_IMAGE_TO_3D=true`
-- [ ] Right Panel: add a new section (behind flag) "Create 3D from Image" with disabled controls (stub)
+- [x] Add feature flag: `VITE_ENABLE_IMAGE_TO_3D=true`
+- [x] Right Panel: add a new section (behind flag) "Create 3D from Image" with disabled controls (stub)
 - [ ] Create directory structure: `public/uploads/images/`, `public/Default_Characters/generated/`
+  - Notes: Planning `.gitkeep` and manifest auto-refresh after MVP script
 
 ## Phase 1 — MVP (Single Image → Quick Preview, Automated)
 - [ ] Script: `scripts/image_to_3d/single_image_mvp.cjs` (Node CLI)
@@ -34,7 +35,7 @@
 - [ ] Quality presets (fast/medium/high) and time estimates in UI
 
 ## UI Integration
-- [ ] Right Panel uploader (single image or folder)
+- [x] Right Panel uploader (single image or folder) — stubbed, disabled behind flag
 - [ ] Pipeline status UI (Queued → Processing → Rigging → Animating → Done)
 - [ ] On success: add to characters, select and load automatically
 - [ ] On failure: clear messages and logs; allow retry
@@ -46,6 +47,6 @@
 - [ ] Retarget test: Attempt to play a library animation; ensure no errors
 
 ## Documentation
-- [ ] Update `coordination/SERVER_STATUS_TRACKER.md` when accessing server or running pipelines
+- [x] Update `coordination/SERVER_STATUS_TRACKER.md` when accessing server or running pipelines
 - [ ] Add Image-to-3D section to main README (note: no manual rigging required)
 - [ ] Add troubleshooting guide for ONNX Runtime and Blender installs on Windows

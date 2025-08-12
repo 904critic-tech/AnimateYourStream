@@ -10,6 +10,13 @@
 **Status:** 🔄 **ACTIVE** - Coordinator session started; server verified (read-only)
 **Current Focus:** Phase 4 Animation & AI task coordination
 
+### 2025-08-12 19:10 - Agent 6 Phase 0 Enablement (Docs/UI Stub)
+- **Agent:** Agent 6 (Image-to-3D Pipeline)
+- **Action:** Initiated Phase 0 enablement; added feature-gated "Image → 3D" tab stub in `src/components/UI/RightPanel.tsx`. Planning script stubs and directory scaffolding.
+- **Status:** 🔄 IN PROGRESS
+- **Server Interaction:** None (no access)
+- **Notes:** Will log to `coordination/SERVER_STATUS_TRACKER.md` before any server actions.
+
 ### 2025-08-12 12:08 - Agent 4 Lip Sync Diagnostics (In-App)
 - **Agent:** Agent 4 (Lip Sync Engineering Team)
 - **Action:** Continued UI-based verification and diagnostics (no code changes)

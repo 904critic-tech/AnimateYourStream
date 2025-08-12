@@ -28,7 +28,7 @@ function RightPanel() {
   } = useAppStore()
   
   const [searchTerm, setSearchTerm] = useState('')
-  const [activeTab, setActiveTab] = useState<'animations' | 'lipsync' | 'sandbox'>('animations')
+  const [activeTab, setActiveTab] = useState<'animations' | 'lipsync' | 'sandbox' | 'image3d'>('animations')
   
   // Enhanced audio processing state
   const [isEnhancedAudioActive, setIsEnhancedAudioActive] = useState(false)
@@ -254,6 +254,18 @@ function RightPanel() {
             >
               Sandbox
             </button>
+            {import.meta.env.VITE_ENABLE_IMAGE_TO_3D === 'true' && (
+              <button
+                onClick={() => setActiveTab('image3d')}
+                className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
+                  activeTab === 'image3d'
+                    ? 'bg-primary-600 text-white'
+                    : 'text-secondary-300 hover:text-white'
+                }`}
+              >
+                Image → 3D
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -299,6 +311,20 @@ function RightPanel() {
               }
             }}
           />
+        </div>
+      )}
+
+      {/* Image to 3D (Agent 6) - Feature gated stub */}
+      {activeTab === 'image3d' && (
+        <div className="p-4 border-b border-secondary-700/50">
+          <div className="mb-4">
+            <h4 className="text-sm font-semibold text-white mb-2">Create 3D from Image (MVP)</h4>
+            <p className="text-xs text-secondary-300 mb-3">Upload a single JPEG/PNG to generate a quick 3D preview. Full autorigging runs offline in the background. This UI is a stub for MVP and is feature-gated.</p>
+            <div className="flex items-center space-x-2">
+              <input type="file" accept="image/*" disabled className="text-xs text-secondary-400" />
+              <button disabled className="px-2 py-1.5 text-xs rounded bg-secondary-700 text-secondary-400">Generate (coming soon)</button>
+            </div>
+          </div>
         </div>
       )}
 
