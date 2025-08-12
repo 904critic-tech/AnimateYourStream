@@ -28,9 +28,9 @@
     "agent:watch:typecheck": "tsc --noEmit --watch",
     "agent:monitor:builder": "node scripts/server/ping_builder_health.cjs",
     "agents:start": "concurrently -n lint,typecheck,builder -c yellow,cyan,magenta \"npm:agent:watch:lint\" \"npm:agent:watch:typecheck\" \"npm:agent:monitor:builder\"",
-      "vercel-build": "vite build",
-      "image3d:mvp": "node scripts/image_to_3d/single_image_mvp.cjs --input public/favicon.ico --slug sample",
-      "test:image3d:mvp": "node scripts/test_image_to_3d_mvp.cjs"
+    "vercel-build": "vite build",
+    "image3d:mvp": "node scripts/image_to_3d/single_image_mvp.cjs --input public/favicon.ico --slug sample",
+    "test:image3d:mvp": "node scripts/test_image_to_3d_mvp.cjs"
   },
   "bin": {},
   "scriptsExt": {},
@@ -42,7 +42,7 @@
     "@types/three": "^0.157.0",
     "clsx": "^2.0.0",
     "cors": "^2.8.5",
-    "express": "^4.19.2",
+    "express": "^4.21.2",
     "lucide-react": "^0.294.0",
     "multer": "^1.4.5-lts.1",
     "react": "^18.2.0",

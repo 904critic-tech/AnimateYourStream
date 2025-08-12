@@ -47,6 +47,10 @@ function RightPanel() {
     isProcessing: false,
     audioBufferSize: 0
   })
+  // Agent 6 - Image→3D local state
+  const [image3dFile, setImage3dFile] = useState<File | null>(null)
+  const [image3dStatus, setImage3dStatus] = useState<string>('')
+  const [image3dBusy, setImage3dBusy] = useState<boolean>(false)
 
   const availableAnimations = (animationInfo.availableAnimations || []) as string[]
   const filteredAnimations = availableAnimations.filter(name => name.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -319,11 +323,56 @@ function RightPanel() {
         <div className="p-4 border-b border-secondary-700/50">
           <div className="mb-4">
             <h4 className="text-sm font-semibold text-white mb-2">Create 3D from Image (MVP)</h4>
-            <p className="text-xs text-secondary-300 mb-3">Upload a single JPEG/PNG to generate a quick 3D preview. Full autorigging runs offline in the background. This UI is a stub for MVP and is feature-gated.</p>
+            <p className="text-xs text-secondary-300 mb-3">Upload a single JPEG/PNG to generate a quick 3D preview using the local builder service.</p>
             <div className="flex items-center space-x-2">
-              <input type="file" accept="image/*" disabled className="text-xs text-secondary-400" />
-              <button disabled className="px-2 py-1.5 text-xs rounded bg-secondary-700 text-secondary-400">Generate (coming soon)</button>
+              <input
+                type="file"
+                accept="image/*"
+                className="text-xs text-secondary-200"
+                onChange={(e) => setImage3dFile(e.target.files?.[0] || null)}
+                disabled={image3dBusy}
+              />
+              <button
+                onClick={async () => {
+                  if (!image3dFile) return
+                  try {
+                    setImage3dBusy(true)
+                    setImage3dStatus('Uploading...')
+                    const url = (import.meta.env.VITE_BUILDER_URL as string) || 'http://127.0.0.1:4001'
+                    const form = new FormData()
+                    form.append('image', image3dFile)
+                    const slug = (image3dFile.name || 'sample').replace(/\.[a-zA-Z0-9]+$/, '').toLowerCase().replace(/[^a-z0-9_-]/g, '-') || 'sample'
+                    form.append('slug', slug)
+                    const resp = await fetch(`${url}/api/image3d/mvp`, { method: 'POST', body: form })
+                    const json = await resp.json()
+                    if (json && json.ok) {
+                      setImage3dStatus('Success. Refreshing characters...')
+                      try {
+                        await fetch('/Default_Characters/character_manifest.json', { cache: 'no-store' })
+                        const sandbox = (window as any).sandboxModelViewer
+                        if (sandbox && sandbox.loadModel) {
+                          sandbox.loadModel(`/Default_Characters/generated/${slug}/model.glb`, `${slug}.glb`)
+                        }
+                      } catch {}
+                      setImage3dStatus('Done')
+                    } else {
+                      setImage3dStatus('Failed: ' + (json && (json.error || json.code) || 'Unknown'))
+                    }
+                  } catch (e: any) {
+                    setImage3dStatus('Error: ' + (e?.message || String(e)))
+                  } finally {
+                    setImage3dBusy(false)
+                  }
+                }}
+                className={`px-2 py-1.5 text-xs rounded ${image3dBusy ? 'bg-secondary-700 text-secondary-400' : 'bg-primary-600 text-white hover:bg-primary-700'}`}
+                disabled={image3dBusy || !image3dFile}
+              >
+                {image3dBusy ? 'Working...' : 'Generate'}
+              </button>
             </div>
+            {image3dStatus && (
+              <div className="text-xs mt-2 text-secondary-200">{image3dStatus}</div>
+            )}
           </div>
         </div>
       )}
