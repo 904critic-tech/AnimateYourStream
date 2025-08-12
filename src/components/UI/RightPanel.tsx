@@ -53,6 +53,11 @@ function RightPanel() {
  
   const aiSuggestionHistory = useAppStore(s => s.aiSuggestionHistory)
   const lastSuggestions = aiSuggestionHistory.slice(-5).reverse()
+  const aiSuggestionsEnabled = useAppStore(s => s.aiSuggestionsEnabled)
+  const aiSuggestionIntervalMs = useAppStore(s => s.aiSuggestionIntervalMs)
+  const setAiSuggestionsEnabled = useAppStore(s => s.setAiSuggestionsEnabled)
+  const setAiSuggestionIntervalMs = useAppStore(s => s.setAiSuggestionIntervalMs)
+  const topSuggested = lastSuggestions[0] || null
 
   const selectAnimation = (animationName: string) => {
     setCurrentAnimation(animationName)
@@ -267,12 +272,35 @@ function RightPanel() {
           <Brain className="w-4 h-4 text-primary-400" />
           <span className="font-semibold text-white">AI Suggestions</span>
         </div>
+        <div className="mt-2 flex items-center gap-3">
+          <label className="flex items-center gap-1">
+            <input
+              type="checkbox"
+              checked={aiSuggestionsEnabled}
+              onChange={(e) => setAiSuggestionsEnabled(e.target.checked)}
+            />
+            <span>Enable</span>
+          </label>
+          <label className="flex items-center gap-1">
+            <span>Interval</span>
+            <input
+              type="number"
+              min={1000}
+              max={30000}
+              step={500}
+              value={aiSuggestionIntervalMs}
+              onChange={(e) => setAiSuggestionIntervalMs(Number(e.target.value) || 4000)}
+              className="w-20 bg-secondary-800 text-secondary-100 px-2 py-0.5 rounded border border-secondary-600"
+            />
+            <span>ms</span>
+          </label>
+        </div>
         {lastSuggestions.length === 0 ? (
           <div className="mt-1 text-secondary-400">No suggestions yet</div>
         ) : (
           <ul className="mt-1 space-y-0.5">
             {lastSuggestions.map((s, idx) => (
-              <li key={idx} className="text-secondary-200">• {s}</li>
+              <li key={idx} className={`text-secondary-200 ${idx === 0 ? 'text-primary-300' : ''}`}>• {s}</li>
             ))}
           </ul>
         )}
@@ -727,7 +755,9 @@ function RightPanel() {
                   className={`p-3 mb-2 rounded-lg cursor-pointer transition-all group ${
                     currentAnimation === animationName
                       ? 'bg-primary-600/20 border border-primary-500/30'
-                      : 'bg-secondary-800/50 hover:bg-secondary-700/70 border border-transparent'
+                      : topSuggested === animationName
+                        ? 'bg-secondary-700/70 border border-primary-500/20'
+                        : 'bg-secondary-800/50 hover:bg-secondary-700/70 border border-transparent'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -737,6 +767,9 @@ function RightPanel() {
                                        transition-colors">
                           {animationName}
                         </h4>
+                        {topSuggested === animationName && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary-700 text-white">suggested</span>
+                        )}
                         {currentAnimation === animationName && (
                           <Zap className="w-3 h-3 text-primary-400" />
                         )}

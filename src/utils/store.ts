@@ -40,6 +40,8 @@ export interface AppState {
   aiResponsiveness: number
   aiCreativity: number
   aiSuggestionHistory: string[]
+  aiSuggestionsEnabled: boolean
+  aiSuggestionIntervalMs: number
   
   // Error reporting state
   errors: ErrorReport[]
@@ -68,6 +70,8 @@ export interface AppState {
   setAiResponsiveness: (responsiveness: number) => void
   setAiCreativity: (creativity: number) => void
   addAiSuggestion: (animationId: string) => void
+  setAiSuggestionsEnabled: (enabled: boolean) => void
+  setAiSuggestionIntervalMs: (ms: number) => void
   
   addError: (error: Omit<ErrorReport, 'id' | 'timestamp'>) => void
   removeError: (id: string) => void
@@ -150,6 +154,8 @@ export const useAppStore = create<AppState>()(
       aiResponsiveness: 0.7,
       aiCreativity: 0.5,
       aiSuggestionHistory: [],
+      aiSuggestionsEnabled: true,
+      aiSuggestionIntervalMs: 4000,
 
       // Procedural idle settings (per-model)
       proceduralIdleSettings: {},
@@ -221,6 +227,8 @@ export const useAppStore = create<AppState>()(
       addAiSuggestion: (animationId) => set((state) => ({
         aiSuggestionHistory: [...state.aiSuggestionHistory, animationId].slice(-20) // Keep last 20
       })),
+      setAiSuggestionsEnabled: (enabled) => set({ aiSuggestionsEnabled: enabled }),
+      setAiSuggestionIntervalMs: (ms) => set({ aiSuggestionIntervalMs: Math.max(1000, Math.min(30000, ms)) }),
       
       addError: (error) => {
         const newError: ErrorReport = {

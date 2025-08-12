@@ -540,17 +540,29 @@ export function AIBehavior({
       }
     }
 
-    // Throttled personality-based suggestion logging (every 4s)
+    const state = useAppStore.getState()
+    if (!state.aiSuggestionsEnabled) {
+      // still tick behavior tree even if suggestions are disabled
+      const nowCheck = typeof performance !== 'undefined' ? performance.now() : Date.now()
+      if (behaviorTreeRef.current && nowCheck - lastBehaviorTickRef.current >= 2000) {
+        behaviorTreeRef.current.tick({ now: nowCheck })
+        lastBehaviorTickRef.current = nowCheck
+      }
+      return
+    }
+
+    // Throttled personality-based suggestion logging (configurable interval)
     const now = typeof performance !== 'undefined' ? performance.now() : Date.now()
-    if (now - lastSuggestionTimeRef.current >= 4000) {
-      const available = Array.isArray((useAppStore.getState().animationInfo?.availableAnimations))
-        ? useAppStore.getState().animationInfo.availableAnimations
+    const interval = Math.max(1000, Math.min(30000, state.aiSuggestionIntervalMs))
+    if (now - lastSuggestionTimeRef.current >= interval) {
+      const available = Array.isArray(state.animationInfo?.availableAnimations)
+        ? state.animationInfo.availableAnimations
         : []
 
       if (available.length > 0 && personalitySystemRef.current && envAwarenessRef.current) {
         const snapshot = envAwarenessRef.current.getSnapshot({
-          audioLevel: useAppStore.getState().audioLevel,
-          animationSpeed: useAppStore.getState().animationSpeed
+          audioLevel: state.audioLevel,
+          animationSpeed: state.animationSpeed
         })
         const suggestions = personalitySystemRef.current.suggestAnimations(available, snapshot)
         const top = suggestions[0]
@@ -568,8 +580,7 @@ export function AIBehavior({
     if (behaviorTreeRef.current) {
       if (now - lastBehaviorTickRef.current >= 2000) {
         behaviorTreeRef.current.tick({ now })
-        // Optional: if engaged and wave exists, record a hint suggestion
-        const available = useAppStore.getState().animationInfo.availableAnimations
+        const available = state.animationInfo.availableAnimations
         if (aiState.lastDecision === 'engage' && Array.isArray(available) && available.includes('wave')) {
           addAiSuggestion('wave')
         }
