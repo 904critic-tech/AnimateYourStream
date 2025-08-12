@@ -2,15 +2,17 @@
 
 ## Current Status: 🎬 **PHASE 4 PLANNING - AGENTS 1 & 2 COMPLETE**
 
-**Last Updated:** 2025-08-12 19:20 (Agent 1)
+**Last Updated:** 2025-08-12 19:40 (Agent 1)
 
 **Agent:** Agent 1 (AI Behavior Team)
-**Current Task:** 🧠 Phase 1 foundation — created core AI behavior scaffolding (docs-only)
+**Current Task:** 🧠 Phase 1 foundation — suggestions + behavior tree (docs-only)
 **Start Time:** 2025-08-12 19:05
 **Status:** 🔄 **ACTIVE** - No server access; code scaffolding and tests
 **Current Focus:** Personality system, environment awareness, behavior tree
 
 - Added (Phase 1): `src/core/PersonalitySystem.tsx`, `src/core/EnvironmentAwareness.tsx`, `src/core/AIBehaviorTree.tsx`
+- Integrated: `AIBehavior.tsx` suggestion logging (gated by `aiBehaviorEnabled`), minimal `BehaviorTree` tick, and `ai:interaction` event listener
+- UI: `RightPanel.tsx` shows recent AI suggestions and emits `ai:interaction` on hover/click (no behavior change)
 
 **Agent:** Coordinator
 **Current Task:** 🎬 **PHASE 4 PLANNING** - Animation & AI Rapid Implementation
