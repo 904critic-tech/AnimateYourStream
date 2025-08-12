@@ -61,48 +61,8 @@ export default defineConfig({
         unknownGlobalSideEffects: false
       }
     },
-
-    // Performance optimizations
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.debug', 'console.warn'],
-        passes: 3,
-        toplevel: true,
-        unsafe: true,
-        unsafe_comps: true,
-        unsafe_Function: true,
-        unsafe_math: true,
-        unsafe_proto: true,
-        unsafe_regexp: true,
-        unsafe_undefined: true,
-        dead_code: true,
-        hoist_funs: true,
-        hoist_vars: true,
-        if_return: true,
-        join_vars: true,
-        loops: true,
-        reduce_vars: true,
-        sequences: true,
-        side_effects: true,
-        unused: true
-      },
-      mangle: {
-        safari10: true,
-        toplevel: true,
-        properties: {
-          regex: /^_/
-        },
-        reserved: ['__REACT_DEVTOOLS_GLOBAL_HOOK__']
-      },
-      format: {
-        comments: false,
-        beautify: false,
-        indent_level: 0
-      }
-    },
+    // Safe default minifier to avoid breaking semantics in production
+    minify: 'esbuild',
 
     // Asset optimization
     assetsInlineLimit: 4096,
