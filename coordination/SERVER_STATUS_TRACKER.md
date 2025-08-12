@@ -28,6 +28,10 @@
 ## 📊 **SERVER ACCESS LOG**
 
 | **Timestamp** | **Agent** | **Action** | **Status** | **Details** |
+| 2025-08-12 19:32:00 | Agent 3 | 🧪 Run `agent3_test_default_model_animations.cjs` | ✅ PASS | TEST_URL=http://localhost:3003 → HTTP 200; ANIMATION_DETECTED=true |
+| 2025-08-12 19:33:00 | Agent 3 | 🧪 Run `agent3_programmatic_switch_check.cjs` | ✅ PASS | All candidates PASS; TEST_URL=http://localhost:3003 |
+| 2025-08-12 19:34:00 | Agent 3 | 🧪 Run `agent3_transition_smoothness_check.cjs` | ✅ PASS | mixerActive=true; noLayerWarn=true; lipSyncStarted=true; TEST_URL=http://localhost:3003 |
+| 2025-08-12 19:35:00 | Agent 3 | 🧪 Run `agent3_cross_model_animation_check.cjs` | ⚠️ PARTIAL | UI clicks not detected; NO_SWITCH for candidates; TEST_URL=http://localhost:3003 |
 | 2025-08-12 18:55:00 | Agent 3 | 🧪 Read-only animation diagnostics session start | 🔄 RUNNING | Planning to run: `node scripts/agent3_test_default_model_animations.cjs`, `node scripts/agent3_programmatic_switch_check.cjs`, `node scripts/agent3_transition_smoothness_check.cjs`; no server restarts |
 | 2025-08-12 18:20:00 | Coordinator | 🌐 Vercel prod URL HTTP check | ⚠️ 401 | `Invoke-WebRequest https://animationstudioforstream-9c3pc8u44-904critic-techs-projects.vercel.app` → 401 (possible protection) |
 | 2025-08-12 18:07:00 | Coordinator | 🔍 Builder health ping (read-only) | ✅ LOGGED | `RUN_ONCE=1 node scripts/server/ping_builder_health.cjs` → DOWN (ECONNREFUSED) — expected as builder not running |

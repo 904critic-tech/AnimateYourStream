@@ -17,7 +17,7 @@ const CANDIDATE_MODELS = [
 ];
 
 (async () => {
-  const url = 'http://localhost:3001';
+  const url = process.env.TEST_URL || 'http://localhost:3001';
   const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox','--disable-setuid-sandbox'] });
   const page = await browser.newPage();
   await page.setViewport({ width: 1440, height: 900 });
