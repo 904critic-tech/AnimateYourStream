@@ -323,3 +323,9 @@
 **Status:** ✅ **COMPLETED**
 **Actions:** Reviewed project structure, identified sandbox implementation, enabled feature flag, diagnosed integration issues
 
+### 2025-08-12 19:20 - Agent 2 Mixamo Loader Test + Dev Log Reduction
+- **Agent:** Agent 2 (Performance Team)
+- **Action:** Ran `scripts/test_mixamo_character_loading.cjs` (PASS) after adding minimal Agent 2 console markers; reduced dev console noise in `src/core/ModelViewer.tsx` (dev-gated logs, removed per-frame log)
+- **Server Interaction:** None (dev server already running on 3001)
+- **Notes:** No functional changes; tests remain green
+
