@@ -1,5 +1,19 @@
 # 🎯 NEXT PHASE COORDINATION PLAN
 
+> superseded: Phase 2 details retained for history; active plan is Phase 4 below
+
+## 🚀 Phase 4 — Animation, Audio/Lip Sync, AI Integration (Next 48h)
+- **Order**: Agent 3 → Agent 4 → Agent 1; Agent 2 & 5 run in parallel
+- **Done**: Phase 3 complete (viewer + autorig + GLB roundtrip); Agents 1 & 2 marked complete by user; baseline ≥200 FPS verified
+- **Targets**:
+  - Agent 3: finalize animation polish; fix UI click selectors; expose hooks app-wide; verify transitions on 3–5 models
+  - Agent 4: integrate enhanced audio; advanced lip sync with morph audit + jaw fallback; reduce face distortion
+  - Agent 1: connect Personality/Expression triggers to animation once Agent 3 signals ready
+  - Agent 2: maintain ≥200 FPS; conservative defaults then ramp; reduce console noise
+  - Agent 5: expand tests for `AnimationController`, `AnimationBlender`, `LipSync`; stabilize puppeteer selectors
+
+---
+
 **Project**: Mixamo Model Viewer - AI Enhanced  
 **Current Phase**: Phase 2 (Quality Assurance & Cross-Platform Testing)  
 **Coordinator**: Claude (Coordinator Agent)  
