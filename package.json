@@ -20,6 +20,7 @@
     "manifest:characters": "node scripts/generate_character_manifest.cjs",
     "post-ingest": "npm run manifest:characters",
     "builder:serve": "node scripts/server/build_service.cjs",
+    "builder:start": "node scripts/server/build_service.cjs",
     "license:init": "node scripts/licenses/init_keys.cjs",
     "license:gen": "node scripts/licenses/generate_code.cjs",
     "license:gen:7": "pwsh -File scripts/licenses/Generate-7day-Code.ps1",
