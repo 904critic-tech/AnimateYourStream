@@ -326,3 +326,10 @@
 - **Server Interaction:** None (no access)
 - **Next:** Optional browser test at `/?test=microphone` to confirm bar updates; will log to `SERVER_STATUS_TRACKER.md` before any server access
 
+### 2025-08-12 19:24 - Agent 4 Audio Reset on Stop (Docs Only)
+- **Agent:** Agent 4 (Lip Sync Engineering Team)
+- **Action:** On `enhancedAudioProcessor.stopProcessing()`, dispatch `audioLevel` event with 0 to reset UI listeners
+- **Files:** `src/core/EnhancedAudioProcessor.ts`
+- **Reason:** Ensure progress bars and listeners immediately reflect mic-off state
+- **Server Interaction:** None (no access)
+

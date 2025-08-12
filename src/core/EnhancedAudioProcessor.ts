@@ -153,6 +153,10 @@ export class EnhancedAudioProcessor {
     
     this.analyzerNode = null
     this.audioBuffer = []
+    // Notify listeners that audio level is now zero
+    window.dispatchEvent(new CustomEvent('audioLevel', {
+      detail: { audioLevel: 0, timestamp: Date.now() }
+    }))
     
     console.log('✅ Agent 4 - Enhanced audio processing stopped')
   }
