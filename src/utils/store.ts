@@ -118,7 +118,7 @@ export const useAppStore = create<AppState>()(
   devtools(
     (set) => ({
       // Initial state
-      isLoading: true,
+      isLoading: false,
       currentModel: 'elmo', // Default to Elmo character
       currentAnimation: null,
       isPlaying: true,

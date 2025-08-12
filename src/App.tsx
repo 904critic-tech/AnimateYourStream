@@ -247,8 +247,8 @@ function App() {
 
   return (
     <div className="w-full h-screen bg-gray-900 relative overflow-hidden">
-      {/* Loading Screen */}
-      {isLoading && <LoadingScreen />}
+      {/* Loading Screen (disabled for production hardening) */}
+      {false && isLoading && <LoadingScreen />}
       
       {/* Main 3D Application */}
       <ErrorBoundary
