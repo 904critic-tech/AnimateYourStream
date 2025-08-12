@@ -10,6 +10,12 @@
 **Status:** 🔄 **ACTIVE** - Coordinator session started; server verified (read-only)
 **Current Focus:** Phase 4 Animation & AI task coordination
 
+### 2025-08-12 20:05 - Agent 6 Image→3D UI status improvements
+- **Agent:** Agent 6 (Image-to-3D Pipeline)
+- **Action:** Improved status messaging in `RightPanel` Image→3D tab for upload, builder contact errors, and model loading feedback.
+- **Status:** ✅ SUCCESS
+- **Server Interaction:** None
+
 ### 2025-08-12 19:56 - Agent 6 Builder verification (short-lived)
 - **Agent:** Agent 6 (Image-to-3D Pipeline)
 - **Action:** Attempted short-lived builder start → /health → MVP upload → stop, with timeouts in CI shell.

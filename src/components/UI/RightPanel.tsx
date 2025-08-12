@@ -337,26 +337,33 @@ function RightPanel() {
                   if (!image3dFile) return
                   try {
                     setImage3dBusy(true)
-                    setImage3dStatus('Uploading...')
-                    const url = (import.meta.env.VITE_BUILDER_URL as string) || 'http://127.0.0.1:4001'
+                    setImage3dStatus('Uploading to builder...')
+                    const url = (import.meta as any).env?.VITE_BUILDER_URL || (import.meta as any).env?.VITE_BUILDER_URL || 'http://127.0.0.1:4001'
                     const form = new FormData()
                     form.append('image', image3dFile)
                     const slug = (image3dFile.name || 'sample').replace(/\.[a-zA-Z0-9]+$/, '').toLowerCase().replace(/[^a-z0-9_-]/g, '-') || 'sample'
                     form.append('slug', slug)
                     const resp = await fetch(`${url}/api/image3d/mvp`, { method: 'POST', body: form })
+                    if (!resp.ok) {
+                      setImage3dStatus(`Failed to contact builder (${resp.status})`)
+                      return
+                    }
                     const json = await resp.json()
                     if (json && json.ok) {
-                      setImage3dStatus('Success. Refreshing characters...')
+                      setImage3dStatus('Success. Loading generated model...')
                       try {
-                        await fetch('/Default_Characters/character_manifest.json', { cache: 'no-store' })
                         const sandbox = (window as any).sandboxModelViewer
                         if (sandbox && sandbox.loadModel) {
                           sandbox.loadModel(`/Default_Characters/generated/${slug}/model.glb`, `${slug}.glb`)
+                          setImage3dStatus('Loaded generated model')
+                        } else {
+                          setImage3dStatus('Generated. Please select the model from the list.')
                         }
-                      } catch {}
-                      setImage3dStatus('Done')
+                      } catch {
+                        setImage3dStatus('Generated. Refresh characters to load the model.')
+                      }
                     } else {
-                      setImage3dStatus('Failed: ' + (json && (json.error || json.code) || 'Unknown'))
+                      setImage3dStatus('Generation failed: ' + (json && (json.error || json.code) || 'Unknown'))
                     }
                   } catch (e: any) {
                     setImage3dStatus('Error: ' + (e?.message || String(e)))

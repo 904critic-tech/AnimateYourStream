@@ -18,9 +18,10 @@
   - [ ] Auto-generate minimal skeleton (root/spine/head) and skin weights
   - [ ] Write GLB + copy texture
   - [ ] Output to `public/Default_Characters/generated/<slug>/model.glb`
-- [ ] README: `scripts/image_to_3d/README.md` with install steps and offline model download notes
+- [x] UI status improvements and error messages (builder contact, loading, fallback)
 - [ ] Manifest: reuse `generate_animation_manifest.cjs` or update `generate_character_manifest.cjs`
 - [ ] Integration: auto-refresh character list in UI on completion
+- [x] Procedural idle fallback after load when no clips present (exists in `SandboxModelViewer`)
 
 ## Phase 2 — Multi-View Photogrammetry (Automated)
 - [ ] PowerShell wrapper: `scripts/image_to_3d/photogrammetry.ps1`
@@ -37,6 +38,7 @@
 ## UI Integration
 - [x] Right Panel uploader (single image or folder) — stubbed, disabled behind flag
 - [x] Builder MVP hook (feature gated) — upload calls `POST /api/image3d/mvp` when flag is enabled
+- [x] Image→3D status label improvements
 - [ ] Pipeline status UI (Queued → Processing → Rigging → Animating → Done)
 - [ ] On success: add to characters, select and load automatically
 - [ ] On failure: clear messages and logs; allow retry
@@ -49,5 +51,5 @@
 
 ## Documentation
 - [x] Update `coordination/SERVER_STATUS_TRACKER.md` when accessing server or running pipelines
-- [ ] Add Image-to-3D section to main README (note: no manual rigging required)
+- [x] Add Image-to-3D section to main README (note: no manual rigging required)
 - [ ] Add troubleshooting guide for ONNX Runtime and Blender installs on Windows
