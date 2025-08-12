@@ -102,6 +102,7 @@ export const LipSync: React.FC<LipSyncProps> = ({
   // Facial rig references
   const jawBoneRef = useRef<THREE.Bone | null>(null)
   const blendShapeMeshRef = useRef<THREE.SkinnedMesh | null>(null)
+  const basicLipSyncRotRef = useRef<number>(0)
 
   // Initialize advanced systems
   useEffect(() => {
@@ -275,13 +276,15 @@ export const LipSync: React.FC<LipSyncProps> = ({
     })
     
     if (headBone) {
-      // Apply basic jaw movement based on audio level
-      const jawRotation = Math.min(audioLevel * 0.3, 0.2) // Max 0.2 radians (~11 degrees)
+      const maxJawRadians = 0.2
+      const targetX = Math.max(0, Math.min(audioLevel * 0.3, maxJawRadians))
+      const prev = basicLipSyncRotRef.current || 0
+      const smoothed = prev + (targetX - prev) * 0.25
+      basicLipSyncRotRef.current = smoothed
       if (headBone.rotation) {
-        headBone.rotation.x = jawRotation
+        const clamped = Math.max(0, Math.min(smoothed, maxJawRadians))
+        headBone.rotation.x = clamped
       }
-      
-      console.log('🎭 Agent 4 - Applied basic lip sync:', { audioLevel, jawRotation })
     }
   }, [modelRef?.current])
 
@@ -309,13 +312,7 @@ export const LipSync: React.FC<LipSyncProps> = ({
         processingLatency: performance.now() - startTime
       }))
 
-      // Log processing
-      console.log('🎭 Agent 4 - Processing audio data:', {
-        voiceActivity: voiceActivity.isSpeaking,
-        confidence: voiceActivity.confidence,
-        emotion: emotion?.emotion,
-        audioLevel
-      })
+      // Reduced console output to avoid spam during normal operation
 
     } catch (error) {
       console.error('🎭 Agent 4 - Error processing audio data:', error)
