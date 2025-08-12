@@ -567,6 +567,24 @@ export function AIBehavior({
     }
   }, [aiState, generateBehaviorDecision])
 
+  useEffect(() => {
+    const onInteraction = (ev: any) => {
+      const type = ev?.detail?.type
+      if (!envAwarenessRef.current) return
+      if (type === 'hover' || type === 'click' || type === 'voice') {
+        envAwarenessRef.current.recordInteraction(type)
+      }
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('ai:interaction', onInteraction as EventListener)
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('ai:interaction', onInteraction as EventListener)
+      }
+    }
+  }, [])
+
   // This component doesn't render anything visible
   return null
 }
