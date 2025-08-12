@@ -907,7 +907,7 @@ export default function SandboxModelViewer({ onModelLoaded }: SandboxModelViewer
       // Create download link (handle ArrayBuffer vs JSON)
       let blob: Blob
       if (result && (result instanceof ArrayBuffer || ArrayBuffer.isView(result))) {
-        const buffer = result instanceof ArrayBuffer ? new Uint8Array(result) : new Uint8Array(result.buffer)
+        const buffer = result instanceof ArrayBuffer ? (result as ArrayBuffer) : (result.buffer as ArrayBuffer)
         blob = new Blob([buffer], { type: 'model/gltf-binary' })
       } else if (typeof result === 'object') {
         blob = new Blob([JSON.stringify(result)], { type: 'model/gltf+json' })

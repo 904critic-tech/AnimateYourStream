@@ -14,6 +14,7 @@ import { useAppStore } from '../utils/store'
 import AnimationBlender, { BlendMode } from './AnimationBlender'
 import { AIBehaviorSystem } from '../ai/AIBehaviorSystem'
 import { AnimationDecisionEngine } from '../ai/AnimationDecisionEngine'
+import { BlendMode as AIBlendMode } from '../ai/types'
 
 // Animation state machine states
 export enum AnimationState {
@@ -362,7 +363,17 @@ export function AnimationController({
         
         // Execute AI decision
         if (animationBlenderRef.current) {
-          switch (decision.blendMode) {
+          const mode = (() => {
+            switch (decision.blendMode) {
+              case AIBlendMode.REPLACE: return BlendMode.REPLACE
+              case AIBlendMode.ADDITIVE: return BlendMode.ADD
+              case AIBlendMode.OVERLAY: return BlendMode.OVERLAY
+              case AIBlendMode.INTERRUPT: return BlendMode.REPLACE
+              default: return BlendMode.REPLACE
+            }
+          })()
+
+          switch (mode) {
             case BlendMode.REPLACE:
               animationBlenderRef.current.blendToAnimation(decision.animation, decision.duration ? decision.duration / 1000 : 0.3)
               break

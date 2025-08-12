@@ -316,7 +316,7 @@ export class Agent1ComprehensiveTester {
       }
 
       // Test audio context addition
-      this.aiSystem.addAudioContext(0.6, [100, 200, 300])
+      this.aiSystem.addAudioContext(0.6, 200)
       const conversationState = this.aiSystem.getConversationState()
       if (!conversationState) {
         errors.push('Conversation state not accessible after audio input')
@@ -360,6 +360,7 @@ export class Agent1ComprehensiveTester {
       const startTime = performance.now()
       for (let i = 0; i < 100; i++) {
         this.contextAnalyzer.addContext({
+          timestamp: Date.now(),
           type: ContextType.INTERACTION,
           intensity: Math.random(),
           metadata: { iteration: i }
@@ -469,7 +470,7 @@ export class Agent1ComprehensiveTester {
     try {
       // Simulate user interaction scenario
       this.aiSystem.addInteractionContext('click', 'character_button', 300)
-      this.aiSystem.addAudioContext(0.7, [150, 250, 350])
+      this.aiSystem.addAudioContext(0.7, 250)
       
       const decision = this.aiSystem.getCurrentAnimationDecision(['idle', 'wave', 'nod', 'dance_short'])
       if (!decision) {
@@ -478,6 +479,7 @@ export class Agent1ComprehensiveTester {
 
       // Simulate conversation scenario
       this.contextAnalyzer.addContext({
+        timestamp: Date.now(),
         type: ContextType.CONVERSATION,
         intensity: 0.8,
         metadata: { speakerCount: 2 }

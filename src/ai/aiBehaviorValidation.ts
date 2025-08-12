@@ -210,12 +210,7 @@ export class AIBehaviorValidator {
       }
 
       // Test audio context
-      this.contextAnalyzer.addContext({
-        type: ContextType.AUDIO_INPUT,
-        intensity: 0.8,
-        metadata: { frequencies: [100, 200, 300] }
-      })
-      const audioContext = this.contextAnalyzer.analyzeAudioContext(0.8, [100, 200, 300])
+      const audioContext = this.contextAnalyzer.analyzeAudioContext(0.8, 200)
       if (audioContext.type !== ContextType.AUDIO_INPUT) {
         errors.push('Audio context not properly analyzed')
       }
@@ -484,11 +479,13 @@ export class AIBehaviorValidator {
 
       // Test invalid context
       try {
-        this.contextAnalyzer.addContext({
+        const invalidContext: any = {
+          timestamp: Date.now(),
           type: 'invalid_context' as any,
           intensity: -1, // Invalid intensity
           metadata: {}
-        })
+        }
+        this.contextAnalyzer.addContext(invalidContext)
         errors.push('Should handle invalid context gracefully')
       } catch (e) {
         // Expected error, this is good

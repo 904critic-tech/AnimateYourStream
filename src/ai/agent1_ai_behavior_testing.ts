@@ -138,7 +138,7 @@ export class Agent1AIBehaviorTester {
 
     // Test 2.2: Audio context analysis
     const test2 = this.runTest('Audio Context Analysis', () => {
-      this.aiSystem.addAudioContext(0.8, [150, 250, 350])
+      this.aiSystem.addAudioContext(0.8, 250)
       const state = this.aiSystem.getBehaviorState()
       return state.activeContexts.some(ctx => ctx.type === ContextType.AUDIO_INPUT)
     })
