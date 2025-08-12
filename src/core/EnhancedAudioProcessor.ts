@@ -250,6 +250,10 @@ export class EnhancedAudioProcessor {
       const store = useAppStore.getState()
       const currentLevel = this.getCurrentAudioLevel()
       store.setAudioLevel(currentLevel)
+      // Emit simple audio level event for listeners (e.g., LipSync)
+      window.dispatchEvent(new CustomEvent('audioLevel', {
+        detail: { audioLevel: currentLevel, timestamp: Date.now() }
+      }))
       
       // Process voice activity detection (stored for potential future use)
       this.detectVoiceActivity(currentLevel)
@@ -286,6 +290,10 @@ export class EnhancedAudioProcessor {
       // Update store with enhanced metrics
       const store = useAppStore.getState()
       store.setAudioLevel(metrics.rms)
+      // Emit audio level event alongside enhanced metrics
+      window.dispatchEvent(new CustomEvent('audioLevel', {
+        detail: { audioLevel: metrics.rms, timestamp: Date.now() }
+      }))
       
       // Emit events for lip sync system
       this.emitAudioEvents(metrics, vad, emotionAnalysis, noiseFiltering)
