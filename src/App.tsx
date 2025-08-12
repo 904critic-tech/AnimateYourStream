@@ -190,6 +190,22 @@ function App() {
     console.log('🎭 Agent 1: Canvas initialized successfully')
   }, [])
 
+  useEffect(() => {
+    // Load persisted AI suggestion settings
+    try {
+      const raw = localStorage.getItem('mixamo-viewer-settings')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (typeof parsed.aiSuggestionsEnabled === 'boolean') {
+          useAppStore.getState().setAiSuggestionsEnabled(parsed.aiSuggestionsEnabled)
+        }
+        if (typeof parsed.aiSuggestionIntervalMs === 'number') {
+          useAppStore.getState().setAiSuggestionIntervalMs(parsed.aiSuggestionIntervalMs)
+        }
+      }
+    } catch {}
+  }, [])
+
   if (hasError) {
     return (
       <ErrorFallback 
