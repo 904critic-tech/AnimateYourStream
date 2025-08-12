@@ -467,7 +467,7 @@ export class AIBehaviorSystem {
       /**
        * Add audio input to AI system
        */
-      addAudio: (audioLevel: number, frequency?: number[]) => {
+      addAudio: (audioLevel: number, frequency?: number) => {
         this.addAudioContext(audioLevel, frequency)
       },
       
