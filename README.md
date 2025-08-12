@@ -70,7 +70,32 @@ All project coordination, team assignments, and documentation is organized in th
 - **Server Start/Stop Notation**: All agents must document when starting or stopping servers in tracker
 - **Verification Process**: Test and verify server status after any start/stop action
 - **Single Instance Enforcement**: Prevent multiple server instances from running simultaneously
-- **Terminal Command Logging**: Log all terminal commands that affect server status in tracker
+- **Terminal Command Logging**: Log all server-related commands in tracker
+
+## 🧪 Image → 3D (Agent 6 MVP)
+
+- Enable feature flag in `.env.local`:
+```
+VITE_ENABLE_IMAGE_TO_3D=true
+VITE_BUILDER_URL=http://127.0.0.1:4001
+```
+- UI: Right Panel shows an Image → 3D tab. Upload an image and click Generate to call the local builder MVP endpoint.
+- Builder MVP service:
+  - Start locally:
+    ```bash
+    node scripts/server/build_service.cjs
+    # health: http://127.0.0.1:4001/health
+    ```
+  - Test upload:
+    ```bash
+    curl -F image=@public/favicon.ico -F slug=sample_ui http://127.0.0.1:4001/api/image3d/mvp
+    ```
+- Direct CLI (no server):
+  ```bash
+  npm run image3d:mvp
+  npm run test:image3d:mvp
+  ```
+- Outputs are written to: `public/Default_Characters/generated/<slug>/` and added to the character manifest.
 
 ## 👥 Team Development
 
@@ -167,17 +192,3 @@ npm run test:e2e   # End-to-end tests
 ## 📋 Next Steps
 
 1. **UI Team**: Polish Mixamo visual styling
-2. **Audio Team**: Implement microphone capture
-3. **All Teams**: Begin parallel development using shared foundation
-
-## 🤝 Contributing
-
-See `TEAM_ASSIGNMENTS.md` for detailed team responsibilities and current progress.
-
-## 📄 License
-
-MIT License - see LICENSE file for details.
-
----
-
-**🚀 Ready for multi-team development!** Each team can now work independently on their specialized features using the solid foundation provided.
