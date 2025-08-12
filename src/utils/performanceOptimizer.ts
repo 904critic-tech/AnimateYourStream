@@ -118,7 +118,13 @@ export class FrustumCullingOptimizer {
     const startTime = performance.now()
     this.culledObjects.clear()
     
-    const frustum = camera.frustum
+    // Build frustum from camera matrices
+    const projScreenMatrix = new (require('three').Matrix4)()
+    const Frustum = require('three').Frustum
+    const frustum = new Frustum()
+    projScreenMatrix.multiplyMatrices((camera as any).projectionMatrix, (camera as any).matrixWorldInverse)
+    frustum.setFromProjectionMatrix(projScreenMatrix)
+
     let totalObjects = 0
     let culledCount = 0
 
@@ -126,10 +132,9 @@ export class FrustumCullingOptimizer {
       totalObjects++
       
       if (object.type === 'Mesh' || object.type === 'Group') {
-        // Simple bounding sphere culling
-        const boundingSphere = object.userData.boundingSphere
-        if (boundingSphere) {
-          if (!frustum.containsSphere(boundingSphere)) {
+        const sphere = (object as any).geometry?.boundingSphere || (object as any).userData?.boundingSphere
+        if (sphere) {
+          if (!frustum.intersectsSphere(sphere)) {
             object.visible = false
             this.culledObjects.add(object)
             culledCount++

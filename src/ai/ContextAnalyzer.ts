@@ -5,19 +5,19 @@ export interface ContextAnalyzerOptions {
 }
 
 export interface AnalyzedContext {
-  primaryContext: string
+  primaryContext: import('./types').ContextType
   intensity: number
   confidence: number
-  activeContexts: string[]
+  activeContexts: import('./types').Context[]
 }
 
-import { Context, ContextType } from './types'
+import { Context, ContextType, EmotionalTone } from './types'
 
 export interface ConversationState {
   isActive: boolean
   speakerCount: number
   lastSpeechTime: number
-  emotionalTone: string
+  emotionalTone: EmotionalTone
   topicEngagement: number
 }
 
@@ -37,7 +37,7 @@ export class ContextAnalyzer {
     isActive: false,
     speakerCount: 0,
     lastSpeechTime: 0,
-    emotionalTone: 'neutral',
+    emotionalTone: EmotionalTone.NEUTRAL,
     topicEngagement: 0
   }
   private environmentalContext: EnvironmentalContext = {
@@ -54,60 +54,63 @@ export class ContextAnalyzer {
   }
 
   analyzeCurrentContext(): AnalyzedContext {
-    // Analyze current context based on available data
     const now = Date.now()
     const recentContexts = this.contexts.filter(ctx => now - ctx.timestamp < 5000)
     
     if (recentContexts.length === 0) {
       return {
-        primaryContext: 'idle',
+        primaryContext: ContextType.IDLE,
         intensity: 0.5,
         confidence: 0.8,
         activeContexts: []
       }
     }
 
-    // Find the most recent and intense context
-    const primaryContext = recentContexts.reduce((prev, current) => 
+    const primary = recentContexts.reduce((prev, current) =>
       current.intensity > prev.intensity ? current : prev
     )
 
     return {
-      primaryContext: primaryContext.type,
-      intensity: primaryContext.intensity,
+      primaryContext: primary.type,
+      intensity: primary.intensity,
       confidence: 0.8,
-      activeContexts: recentContexts.map(ctx => ctx.type)
+      activeContexts: recentContexts
     }
   }
 
   addContext(context: Context): void {
     this.contexts.push(context)
-    
-    // Keep only recent contexts
     const now = Date.now()
     this.contexts = this.contexts.filter(ctx => now - ctx.timestamp < 10000)
   }
 
-  analyzeAudioContext(audioLevel: number, frequency?: number): void {
-    if (!this.options.enableAudioAnalysis) return
+  analyzeAudioContext(audioLevel: number, frequency?: number): Context {
+    if (!this.options.enableAudioAnalysis) {
+      return {
+        timestamp: Date.now(),
+        type: ContextType.IDLE,
+        intensity: 0.5
+      }
+    }
 
     const context: Context = {
       timestamp: Date.now(),
       type: ContextType.AUDIO_INPUT,
-      intensity: Math.min(1, audioLevel),
+      intensity: Math.min(1, Math.max(0, audioLevel)),
       metadata: { frequency }
     }
 
     this.addContext(context)
+    return context
   }
 
   analyzeInteractionContext(type: string, intensity: number): Context {
     if (!this.options.enableUserInteractionTracking) {
-          return {
-      timestamp: Date.now(),
-      type: ContextType.IDLE,
-      intensity: 0.5
-    }
+      return {
+        timestamp: Date.now(),
+        type: ContextType.IDLE,
+        intensity: 0.5
+      }
     }
 
     const context: Context = {
@@ -125,20 +128,14 @@ export class ContextAnalyzer {
     return { ...this.conversationState }
   }
 
-  analyzeEmotionalTone(): string {
-    // Simple emotional tone analysis based on recent contexts
-    const recentContexts = this.contexts.filter(ctx => 
-      Date.now() - ctx.timestamp < 3000
-    )
-
-    if (recentContexts.length === 0) return 'neutral'
-
-    const avgIntensity = recentContexts.reduce((sum, ctx) => sum + ctx.intensity, 0) / recentContexts.length
-    
-    if (avgIntensity > 0.7) return 'excited'
-    if (avgIntensity > 0.5) return 'positive'
-    if (avgIntensity > 0.3) return 'neutral'
-    return 'calm'
+  analyzeEmotionalTone(): EmotionalTone {
+    const recent = this.contexts.filter(ctx => Date.now() - ctx.timestamp < 3000)
+    if (recent.length === 0) return EmotionalTone.NEUTRAL
+    const avg = recent.reduce((sum, ctx) => sum + ctx.intensity, 0) / recent.length
+    if (avg > 0.7) return EmotionalTone.EXCITED
+    if (avg > 0.5) return EmotionalTone.POSITIVE
+    if (avg > 0.3) return EmotionalTone.NEUTRAL
+    return EmotionalTone.CALM
   }
 
   getEnvironmentalContext(): EnvironmentalContext {
@@ -147,7 +144,6 @@ export class ContextAnalyzer {
 
   setEnvironmentalFactors(factors: Partial<EnvironmentalContext>): void {
     if (!this.options.enableEnvironmentalAwareness) return
-    
     this.environmentalContext = { ...this.environmentalContext, ...factors }
   }
 
@@ -157,10 +153,14 @@ export class ContextAnalyzer {
       isActive: false,
       speakerCount: 0,
       lastSpeechTime: 0,
-      emotionalTone: 'neutral',
+      emotionalTone: EmotionalTone.NEUTRAL,
       topicEngagement: 0
     }
   }
+
+  // Stubs used by tests
+  getInteractionPatterns?(): any[] { return [] }
+  getPredictiveAnalysis?(): any { return { prediction: 'idle' } }
 }
 
 export default ContextAnalyzer

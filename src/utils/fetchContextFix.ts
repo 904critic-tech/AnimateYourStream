@@ -10,21 +10,14 @@
  * Creates a properly bound fetch function to avoid "Illegal invocation" errors
  */
 export function createBoundFetch(): typeof fetch {
-  // Get the original fetch function
   const originalFetch = window.fetch
-  
-  // Create a bound version that ensures proper context
   const boundFetch = originalFetch.bind(window)
-  
-  // Add additional safety checks
   return function safeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
     try {
-      // Ensure we're calling fetch with the correct context
       return boundFetch(input, init)
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('Illegal invocation')) {
+      if (error instanceof TypeError && (error as Error).message.includes('Illegal invocation')) {
         console.warn('⚡ Agent 2: Caught Illegal invocation, retrying with direct call')
-        // Fallback: call fetch directly on window
         return window.fetch(input, init)
       }
       throw error
@@ -35,53 +28,42 @@ export function createBoundFetch(): typeof fetch {
 /**
  * Wraps a loader with fetch context protection
  */
-export function wrapLoaderWithFetchFix<T extends any>(
+export function wrapLoaderWithFetchFix<T extends object>(
   LoaderClass: new () => T,
   fetchFix: typeof fetch = createBoundFetch()
 ): T {
   const loader = new LoaderClass()
-  
-  // Store original fetch
   const originalFetch = (globalThis as any).fetch
-  
-  // Apply fetch fix
   ;(globalThis as any).fetch = fetchFix
-  
-  // Return a proxy that restores fetch when loader is done
-  return new Proxy(loader, {
+
+  return new Proxy(loader as any, {
     get(target, prop) {
-      const value = target[prop as keyof T]
-      
+      const value = (target as any)[prop]
       if (typeof value === 'function') {
         return function(...args: any[]) {
           try {
             const result = value.apply(target, args)
-            
-            // If it's a promise (like load method), restore fetch when done
             if (result && typeof result.then === 'function') {
               return result.finally(() => {
                 ;(globalThis as any).fetch = originalFetch
               })
             }
-            
             return result
           } catch (error) {
-            // Restore fetch on error
             ;(globalThis as any).fetch = originalFetch
             throw error
           }
         }
       }
-      
       return value
     }
-  })
+  }) as T
 }
 
 /**
  * Creates a safe loader factory that handles fetch context issues
  */
-export function createSafeLoader<T extends any>(
+export function createSafeLoader<T extends object>(
   LoaderClass: new () => T
 ): () => T {
   return () => wrapLoaderWithFetchFix(LoaderClass)
@@ -113,12 +95,9 @@ export async function safeFetchBlob(url: string): Promise<Response> {
   try {
     return await fetch(url)
   } catch (error) {
-    if (error instanceof TypeError && error.message.includes('Illegal invocation')) {
+    if (error instanceof TypeError && (error as Error).message.includes('Illegal invocation')) {
       console.warn('⚡ Agent 2: Blob fetch failed, trying alternative approach')
-      
-      // Alternative approach for blob URLs
       if (url.startsWith('blob:')) {
-        // For blob URLs, try using XMLHttpRequest as fallback
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest()
           xhr.open('GET', url, true)
