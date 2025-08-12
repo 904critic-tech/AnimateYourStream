@@ -206,6 +206,24 @@ function App() {
     } catch {}
   }, [])
 
+  useEffect(() => {
+    // Auto-persist AI suggestion settings on change
+    const unsubscribe = useAppStore.subscribe((state) => {
+      try {
+        const raw = localStorage.getItem('mixamo-viewer-settings')
+        const existing = raw ? JSON.parse(raw) : {}
+        const next = {
+          ...existing,
+          aiSuggestionsEnabled: state.aiSuggestionsEnabled,
+          aiSuggestionIntervalMs: state.aiSuggestionIntervalMs,
+          timestamp: Date.now()
+        }
+        localStorage.setItem('mixamo-viewer-settings', JSON.stringify(next))
+      } catch {}
+    })
+    return () => unsubscribe()
+  }, [])
+
   if (hasError) {
     return (
       <ErrorFallback 

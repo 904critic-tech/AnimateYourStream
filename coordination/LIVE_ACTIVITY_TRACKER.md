@@ -2,17 +2,18 @@
 
 ## Current Status: 🎬 **PHASE 4 PLANNING - AGENTS 1 & 2 COMPLETE**
 
-**Last Updated:** 2025-08-12 19:55 (Agent 1)
+**Last Updated:** 2025-08-12 20:05 (Agent 1)
 
 **Agent:** Agent 1 (AI Behavior Team)
-**Current Task:** 🧠 Phase 1 foundation — suggestions + behavior tree (UI controls added)
+**Current Task:** 🧠 Phase 1 foundation — suggestions + behavior tree (settings persisted)
 **Start Time:** 2025-08-12 19:05
 **Status:** 🔄 **ACTIVE** - No server access; code scaffolding and tests
 **Current Focus:** Personality system, environment awareness, behavior tree
 
 - Added (Phase 1): `src/core/PersonalitySystem.tsx`, `src/core/EnvironmentAwareness.tsx`, `src/core/AIBehaviorTree.tsx`
 - Integrated: `AIBehavior.tsx` suggestion logging (gated), configurable interval, minimal `BehaviorTree` tick, `ai:interaction` listener
-- UI: `RightPanel.tsx` shows recent suggestions, added enable/interval controls, and highlights top suggestion; emits `ai:interaction` on hover/click
+- UI: `RightPanel.tsx` shows recent suggestions, added enable/interval controls, highlights top suggestion
+- Settings: `SettingsPanel.tsx` mirrors controls; `App.tsx` loads and auto-persists suggestion settings
 - Store: Added `aiSuggestionsEnabled`, `aiSuggestionIntervalMs` with setters
 
 **Agent:** Coordinator
