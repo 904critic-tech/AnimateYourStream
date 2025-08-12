@@ -21,11 +21,49 @@ async function clickByVisibleText(page, text) {
     const candidates = Array.from(document.querySelectorAll('button, [role="button"], [class*="button"], [class*="item"], div, span, a'));
     const el = candidates.find((n) => n && n.textContent && n.textContent.trim().toLowerCase().includes(t.toLowerCase()));
     if (el) {
-      el.click();
+      el.scrollIntoView({ behavior: 'instant', block: 'center' });
+      (el).click();
       return true;
     }
     return false;
   }, text);
+}
+
+async function selectCharacterByName(page, text) {
+  // Prefer LeftPanel grid items for deterministic selection
+  const didClick = await page.evaluate((t) => {
+    const items = Array.from(document.querySelectorAll('.model-grid .model-item'));
+    function getName(node) {
+      const nameEl = node.querySelector('p');
+      return (nameEl && nameEl.textContent) ? nameEl.textContent.trim().toLowerCase() : '';
+    }
+    const item = items.find((it) => getName(it).includes(t.toLowerCase()));
+    if (item) {
+      item.scrollIntoView({ behavior: 'instant', block: 'center' });
+      (item).click();
+      return true;
+    }
+    return false;
+  }, text);
+
+  if (!didClick) {
+    // Fallback to generic visible-text click
+    return clickByVisibleText(page, text);
+  }
+  return true;
+}
+
+async function clickLoadSelectedButton(page) {
+  return page.evaluate(() => {
+    const buttons = Array.from(document.querySelectorAll('button'));
+    const btn = buttons.find(b => b.textContent && b.textContent.toLowerCase().includes('load selected model'));
+    if (btn) {
+      btn.scrollIntoView({ behavior: 'instant', block: 'center' });
+      (btn).click();
+      return true;
+    }
+    return false;
+  });
 }
 
 (async () => {
@@ -50,21 +88,22 @@ async function clickByVisibleText(page, text) {
 
   for (const model of CANDIDATE_MODELS) {
     try {
-      const clicked = await clickByVisibleText(page, model.text);
+      const clicked = await selectCharacterByName(page, model.text);
       if (!clicked) {
         results.push({ model: model.text, status: 'NO_UI_ELEMENT' });
         continue;
       }
 
-      // Some UIs require explicit "Load" press; try to click a Load button if present
-      await new Promise(r => setTimeout(r, 600));
-      await clickByVisibleText(page, 'Load');
+      // Attempt to press the explicit load button when available
+      await new Promise(r => setTimeout(r, 300));
+      await clickLoadSelectedButton(page);
+
       await new Promise(r => setTimeout(r, 1200));
 
       // Detection windows
       const switched = await page.evaluate((needle) => {
         const arr = (window).consoleLogs || [];
-        const hasLoadLog = arr.some((l) => l.includes('Loading character') || l.includes('Loading model:'));
+        const hasLoadLog = arr.some((l) => l.includes('Loading character') || l.includes('Loading model:') || l.includes('Model loading initiated'));
         const mentionsModel = arr.some((l) => l.toLowerCase().includes(needle.toLowerCase()));
         return hasLoadLog || mentionsModel;
       }, model.text);
