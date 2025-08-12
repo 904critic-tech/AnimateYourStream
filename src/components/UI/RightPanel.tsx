@@ -333,8 +333,12 @@ function RightPanel() {
             {/* Enhanced Audio Level Meter */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs text-secondary-300">Audio Level</label>
-                <span className="text-xs text-white">{(audioLevel * 100).toFixed(0)}%</span>
+                <label className="text-xs text-secondary-300">
+                  {(!isEnhancedAudioActive || !microphoneEnabled) ? 'Audio Level (Mic off)' : 'Audio Level'}
+                </label>
+                <span className="text-xs text-white">
+                  {(!isEnhancedAudioActive || !microphoneEnabled) ? '0%' : `${(audioLevel * 100).toFixed(0)}%`}
+                </span>
               </div>
               <div className="w-full h-2 bg-secondary-700 rounded-lg overflow-hidden">
                 <div
