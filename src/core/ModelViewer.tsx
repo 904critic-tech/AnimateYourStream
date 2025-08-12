@@ -603,8 +603,8 @@ function CharacterLoader({
             message: 'Loading OBJ model...'
           })
           
-          return new Promise((resolve, reject) => {
-            const loader = new OBJLoader()
+          return withFetchContextFix(async () => new Promise((resolve, reject) => {
+            const loader = createSafeLoader(OBJLoader)()
             
             // Set up error handling for blob URL loading
             const handleError = (error: any) => {
@@ -693,7 +693,7 @@ function CharacterLoader({
                 )
               }))
             }
-          })
+          }))
 
         default:
           throw new Error(`Unsupported file format: ${format}`)

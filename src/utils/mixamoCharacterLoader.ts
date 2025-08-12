@@ -281,7 +281,7 @@ export class MixamoCharacterLoader {
       // Use the enhanced fetch context fix utility
       withFetchContextFix(async () => {
         return new Promise<{ model: Group; animations: AnimationClip[]; mixer?: AnimationMixer }>((innerResolve, innerReject) => {
-          const loader = new FBXLoader()
+          const loader = createSafeLoader(FBXLoader)()
           
           loader.load(
             url,
@@ -372,7 +372,7 @@ export class MixamoCharacterLoader {
       // Use the enhanced fetch context fix utility
       withFetchContextFix(async () => {
         return new Promise<{ model: Group; animations: AnimationClip[]; mixer?: AnimationMixer }>((innerResolve, innerReject) => {
-          const loader = new GLTFLoader()
+          const loader = createSafeLoader(GLTFLoader)()
           
           loader.load(
             url,
@@ -454,79 +454,65 @@ export class MixamoCharacterLoader {
     timeoutId: number
   ): void {
     try {
-      // Bind the fetch function to the global context to avoid "Illegal invocation"
-      const originalFetch = window.fetch
-      const boundFetch = originalFetch.bind(window)
-      
-      // Temporarily replace the global fetch with the bound version
-      const originalGlobalFetch = (globalThis as any).fetch
-      ;(globalThis as any).fetch = boundFetch
-      
-      // Create a new loader with the fixed fetch context
-      const contextFixedLoader = new OBJLoader()
-      
+      // Use safe loader under withFetchContextFix to avoid fetch context issues
+      withFetchContextFix(async () => {
+        const contextFixedLoader = createSafeLoader(OBJLoader)()
         contextFixedLoader.load(
-        url,
-        (object: Group) => {
-          window.clearTimeout(timeoutId)
-          
-          // Restore original fetch
-          ;(globalThis as any).fetch = originalGlobalFetch
-          
-          onProgress({
-            loaded: 80,
-            total: 100,
-            percentage: 80,
-            stage: 'processing',
-            message: 'Processing OBJ model...'
-          })
+          url,
+          (object: Group) => {
+            window.clearTimeout(timeoutId)
+            
+            onProgress({
+              loaded: 80,
+              total: 100,
+              percentage: 80,
+              stage: 'processing',
+              message: 'Processing OBJ model...'
+            })
 
-          // OBJ files typically don't have animations
-          const animations: AnimationClip[] = []
-          const mixer = undefined
+            // OBJ files typically don't have animations
+            const animations: AnimationClip[] = []
+            const mixer = undefined
 
-          // Optimize model (Mixamo-style optimization)
-          this.optimizeModelForMixamo(object)
+            // Optimize model (Mixamo-style optimization)
+            this.optimizeModelForMixamo(object)
 
-          onProgress({
-            loaded: 100,
-            total: 100,
-            percentage: 100,
-            stage: 'complete',
-            message: 'OBJ model loaded successfully with Mixamo approach!'
-          })
+            onProgress({
+              loaded: 100,
+              total: 100,
+              percentage: 100,
+              stage: 'complete',
+              message: 'OBJ model loaded successfully with Mixamo approach!'
+            })
 
-          resolve({ model: object, animations, mixer })
-        },
-        (progress) => {
-          const percentage = progress.lengthComputable 
-            ? 30 + (progress.loaded / progress.total) * 50
-            : 50
-          
-          onProgress({
-            loaded: progress.loaded,
-            total: progress.total,
-            percentage,
-            stage: 'downloading',
-            message: `Downloading OBJ: ${percentage.toFixed(1)}%`
-          })
-        },
-        (error) => {
-          window.clearTimeout(timeoutId)
-          
-          // Restore original fetch
-          ;(globalThis as any).fetch = originalGlobalFetch
-          
-          onProgress({
-            loaded: 0,
-            total: 100,
-            percentage: 0,
-            stage: 'error',
-            message: `OBJ loading failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-          })
-          reject(error instanceof Error ? error : new Error(String(error)))
-        }
-      )
+            resolve({ model: object, animations, mixer })
+          },
+          (progress) => {
+            const percentage = progress.lengthComputable 
+              ? 30 + (progress.loaded / progress.total) * 50
+              : 50
+            
+            onProgress({
+              loaded: progress.loaded,
+              total: progress.total,
+              percentage,
+              stage: 'downloading',
+              message: `Downloading OBJ: ${percentage.toFixed(1)}%`
+            })
+          },
+          (error) => {
+            window.clearTimeout(timeoutId)
+            onProgress({
+              loaded: 0,
+              total: 100,
+              percentage: 0,
+              stage: 'error',
+              message: `OBJ loading failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+            })
+            reject(error instanceof Error ? error : new Error(String(error)))
+          }
+        )
+      })
     } catch (error) {
       window.clearTimeout(timeoutId)
       reject(error instanceof Error ? error : new Error(String(error)))

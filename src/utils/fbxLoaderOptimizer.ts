@@ -11,6 +11,7 @@
  */
 
 import { FBXLoader } from 'three-stdlib'
+import { createSafeLoader, withFetchContextFix } from './fetchContextFix'
 import { Group, AnimationMixer, AnimationClip } from 'three'
 import { QualityLevel } from './performance'
 
@@ -71,7 +72,7 @@ export class FBXLoaderOptimizer {
 
   constructor(options: Partial<FBXLoadingOptions> = {}) {
     this.options = { ...DEFAULT_OPTIONS, ...options }
-    this.loader = new FBXLoader()
+    this.loader = createSafeLoader(FBXLoader)()
     
     // Configure loader for optimal performance
     this.configureLoader()
@@ -199,7 +200,7 @@ export class FBXLoaderOptimizer {
     url: string,
     onProgress: (progress: FBXLoadingProgress) => void
   ): Promise<{ model: Group; animations: AnimationClip[]; mixer?: AnimationMixer }> {
-    return new Promise((resolve, reject) => {
+    return withFetchContextFix(async () => new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error(`FBX loading timeout after ${this.options.timeout}ms`))
       }, this.options.timeout)
@@ -219,75 +220,46 @@ export class FBXLoaderOptimizer {
           clearTimeout(timeoutId)
           
           onProgress({
-            loaded: 100,
+            loaded: 80,
             total: 100,
-            percentage: 100,
-            stage: 'processing',
-            message: 'Processing loaded model...'
+            percentage: 80,
+            stage: 'parsing',
+            message: 'Parsing FBX data...'
           })
           
-          // Process animations
-          const animations: AnimationClip[] = []
-          let mixer: AnimationMixer | undefined
+          // Extract animations
+          const animations = (object as any).animations || []
+          const mixer = animations.length > 0 ? new AnimationMixer(object) : undefined
           
-          if (object.animations && object.animations.length > 0) {
-            mixer = new AnimationMixer(object)
-            animations.push(...object.animations)
-            
-            console.log(`⚡ Agent 2: Found ${animations.length} animations`)
-          }
-          
-          // Optimize model for performance
-          this.optimizeModel(object)
-          
+          // Final progress update
           onProgress({
             loaded: 100,
             total: 100,
             percentage: 100,
             stage: 'complete',
-            message: 'Model loaded successfully!'
+            message: 'FBX model loaded successfully'
           })
           
           resolve({ model: object, animations, mixer })
         },
-        (progress) => {
-          // Calculate progress percentage
-          const percentage = progress.lengthComputable 
-            ? (progress.loaded / progress.total) * 100 
-            : 50 // Fallback if length not computable
-          
-          // Calculate download speed
-          const elapsed = performance.now() - this.loadingStartTime
-          const downloadSpeed = elapsed > 0 ? (progress.loaded / elapsed) * 1000 : 0
-          
-          // Estimate time remaining
-          const estimatedTimeRemaining = downloadSpeed > 0 
-            ? (progress.total - progress.loaded) / downloadSpeed 
-            : undefined
-          
+        (progress: any) => {
+          const percentage = progress.lengthComputable
+            ? 20 + (progress.loaded / progress.total) * 60
+            : 50
           onProgress({
             loaded: progress.loaded,
             total: progress.total,
             percentage,
             stage: 'downloading',
-            message: `Downloading: ${percentage.toFixed(1)}%`,
-            downloadSpeed,
-            estimatedTimeRemaining
+            message: `Downloading FBX file... ${percentage.toFixed(1)}%`
           })
         },
-        (error) => {
+        (error: any) => {
           clearTimeout(timeoutId)
-          onProgress({
-            loaded: 0,
-            total: 100,
-            percentage: 0,
-            stage: 'error',
-            message: `Loading failed: ${error.message}`
-          })
           reject(error)
         }
       )
-    })
+    }))
   }
 
   /**

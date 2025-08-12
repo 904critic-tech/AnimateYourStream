@@ -70,8 +70,8 @@
     "rollup-plugin-analyzer": "^4.0.0",
     "rollup-plugin-visualizer": "^5.14.0",
     "terser": "^5.43.1",
-    "typescript": "^5.2.2",
-    "vite": "^4.5.0",
+    "typescript": "^5.9.2",
+    "vite": "^4.5.14",
     "vite-bundle-analyzer": "^0.7.0",
     "vite-plugin-pwa": "^0.17.0"
   },
