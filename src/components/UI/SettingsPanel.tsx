@@ -20,7 +20,11 @@ function SettingsPanel() {
     setAiResponsiveness,
     setAiCreativity,
     setAiPersonalityPreset,
-    toggleSettingsPanel
+    toggleSettingsPanel,
+    aiSuggestionsEnabled,
+    aiSuggestionIntervalMs,
+    setAiSuggestionsEnabled,
+    setAiSuggestionIntervalMs
   } = useAppStore()
 
   const personalityPresets = [
@@ -34,6 +38,8 @@ function SettingsPanel() {
     setAiResponsiveness(0.7)
     setAiCreativity(0.5)
     setAiPersonalityPreset('balanced')
+    setAiSuggestionsEnabled(true)
+    setAiSuggestionIntervalMs(4000)
     console.log('💋 Agent 4: Settings reset to defaults')
   }
 
@@ -43,6 +49,8 @@ function SettingsPanel() {
       aiResponsiveness,
       aiCreativity,
       aiPersonalityPreset,
+      aiSuggestionsEnabled,
+      aiSuggestionIntervalMs,
       timestamp: Date.now()
     }
     localStorage.setItem('mixamo-viewer-settings', JSON.stringify(settings))
@@ -131,6 +139,30 @@ function SettingsPanel() {
             <div className="flex justify-between text-xs text-secondary-400">
               <span>Predictable</span>
               <span>Experimental</span>
+            </div>
+          </div>
+
+          {/* AI Suggestions */}
+          <div className="space-y-2">
+            <label className="text-sm text-secondary-300">AI Suggestions</label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={aiSuggestionsEnabled} onChange={(e) => setAiSuggestionsEnabled(e.target.checked)} />
+                <span>Enable</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <span>Interval</span>
+                <input
+                  type="number"
+                  min={1000}
+                  max={30000}
+                  step={500}
+                  value={aiSuggestionIntervalMs}
+                  onChange={(e) => setAiSuggestionIntervalMs(Number(e.target.value) || 4000)}
+                  className="w-24 bg-secondary-800 text-secondary-100 px-2 py-1 rounded border border-secondary-600"
+                />
+                <span>ms</span>
+              </label>
             </div>
           </div>
         </div>
