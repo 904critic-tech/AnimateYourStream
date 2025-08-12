@@ -10,6 +10,13 @@
 **Status:** 🔄 **ACTIVE** - Coordinator session started; server verified (read-only)
 **Current Focus:** Phase 4 Animation & AI task coordination
 
+### 2025-08-12 19:56 - Agent 6 Builder verification (short-lived)
+- **Agent:** Agent 6 (Image-to-3D Pipeline)
+- **Action:** Attempted short-lived builder start → /health → MVP upload → stop, with timeouts in CI shell.
+- **Status:** ⚠️ TIMEOUT (environment)
+- **Server Interaction:** Short-lived process only; no persistent server kept running
+- **Notes:** UI wiring complete; endpoint exists. Will verify in a stable dev shell; meanwhile, MVP pipeline works via direct Node script (`image3d:mvp`).
+
 ### 2025-08-12 19:18 - Agent 6 MVP generation + test (Docs/Local Files Only)
 - **Agent:** Agent 6 (Image-to-3D Pipeline)
 - **Action:** Ran `npm run image3d:mvp` and `npm run test:image3d:mvp`; outputs present under `public/Default_Characters/generated/sample/`.
