@@ -344,27 +344,42 @@ export class JawTongueSimulation {
   // Interpolate current state towards target
   private interpolateState(deltaTime: number): void {
     const speed = this.config.interpolationSpeed * deltaTime
+    const t = Math.max(0, Math.min(1, speed))
     
-    // Interpolate jaw movement
-    this.currentState.jaw.rotation.lerp(this.targetState.jaw.rotation, speed)
-    this.currentState.jaw.translation.lerp(this.targetState.jaw.translation, speed)
+    // Interpolate jaw movement (Euler does not support lerp natively)
+    this.currentState.jaw.rotation.x = THREE.MathUtils.lerp(
+      this.currentState.jaw.rotation.x,
+      this.targetState.jaw.rotation.x,
+      t
+    )
+    this.currentState.jaw.rotation.y = THREE.MathUtils.lerp(
+      this.currentState.jaw.rotation.y,
+      this.targetState.jaw.rotation.y,
+      t
+    )
+    this.currentState.jaw.rotation.z = THREE.MathUtils.lerp(
+      this.currentState.jaw.rotation.z,
+      this.targetState.jaw.rotation.z,
+      t
+    )
+    this.currentState.jaw.translation.lerp(this.targetState.jaw.translation, t)
     
     // Interpolate tongue movement
-    this.currentState.tongue.position.lerp(this.targetState.tongue.position, speed)
+    this.currentState.tongue.position.lerp(this.targetState.tongue.position, t)
     this.currentState.tongue.elevation = THREE.MathUtils.lerp(
       this.currentState.tongue.elevation,
       this.targetState.tongue.elevation,
-      speed
+      t
     )
     this.currentState.tongue.advancement = THREE.MathUtils.lerp(
       this.currentState.tongue.advancement,
       this.targetState.tongue.advancement,
-      speed
+      t
     )
     this.currentState.tongue.tension = THREE.MathUtils.lerp(
       this.currentState.tongue.tension,
       this.targetState.tongue.tension,
-      speed
+      t
     )
     
     // Update phoneme

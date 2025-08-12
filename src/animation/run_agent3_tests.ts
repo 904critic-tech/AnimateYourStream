@@ -4,7 +4,7 @@
  * Executes animation system tests and generates reports
  */
 
-import SimpleAnimationTester from './agent3_simple_testing.ts'
+import { SimpleAnimationTester } from './agent3_simple_testing.ts'
 
 // Run the animation tests
 console.log('🎭 Agent 3 - Starting Animation Systems Testing...\n')
