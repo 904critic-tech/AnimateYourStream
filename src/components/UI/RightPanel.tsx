@@ -717,7 +717,13 @@ function RightPanel() {
               {filteredAnimations.map((animationName, idx) => (
                 <div
                   key={`${animationName}-${idx}`}
-                  onClick={() => selectAnimation(animationName)}
+                  onMouseEnter={() => {
+                    try { window.dispatchEvent(new CustomEvent('ai:interaction', { detail: { type: 'hover' } })) } catch {}
+                  }}
+                  onClick={() => {
+                    try { window.dispatchEvent(new CustomEvent('ai:interaction', { detail: { type: 'click' } })) } catch {}
+                    selectAnimation(animationName)
+                  }}
                   className={`p-3 mb-2 rounded-lg cursor-pointer transition-all group ${
                     currentAnimation === animationName
                       ? 'bg-primary-600/20 border border-primary-500/30'
@@ -741,6 +747,7 @@ function RightPanel() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
+                        try { window.dispatchEvent(new CustomEvent('ai:interaction', { detail: { type: 'click' } })) } catch {}
                         selectAnimation(animationName)
                       }}
                       className="opacity-0 group-hover:opacity-100 p-1.5 bg-primary-600 
