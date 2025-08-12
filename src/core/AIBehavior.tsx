@@ -16,6 +16,7 @@ import { ContextAnalyzer } from '../ai/ContextAnalyzer'
 import { PersonalityEngine } from '../ai/PersonalityEngine'
 import { PersonalitySystem } from './PersonalitySystem'
 import { EnvironmentAwareness } from './EnvironmentAwareness'
+import { BehaviorTree, SelectorNode, SequenceNode, ActionNode } from './AIBehaviorTree'
 
 // Character personality types
 export enum PersonalityType {
@@ -160,6 +161,8 @@ export function AIBehavior({
   const personalitySystemRef = useRef<PersonalitySystem | null>(null)
   const envAwarenessRef = useRef<EnvironmentAwareness | null>(null)
   const lastSuggestionTimeRef = useRef<number>(0)
+  const behaviorTreeRef = useRef<BehaviorTree | null>(null)
+  const lastBehaviorTickRef = useRef<number>(0)
 
   // Personality-based behavior patterns
   const personalityPatterns = useMemo(() => new Map<PersonalityType, any>([
@@ -324,6 +327,33 @@ export function AIBehavior({
     if (!envAwarenessRef.current) {
       envAwarenessRef.current = new EnvironmentAwareness()
     }
+
+    // Initialize a minimal behavior tree
+    const engageAction = new ActionNode(() => {
+      setAIState((prev) => ({ ...prev, lastDecision: 'engage' }))
+      return 'success'
+    })
+    const idleAction = new ActionNode(() => {
+      setAIState((prev) => ({ ...prev, lastDecision: 'idle' }))
+      return 'success'
+    })
+
+    // Selector prefers engage if recent interactions are frequent
+    const root = new SelectorNode([
+      new SequenceNode([
+        new ActionNode(() => {
+          const snap = envAwarenessRef.current!.getSnapshot({
+            audioLevel: useAppStore.getState().audioLevel,
+            animationSpeed: useAppStore.getState().animationSpeed
+          })
+          return snap.interactionFrequency > 0.1 ? 'success' : 'failure'
+        }),
+        engageAction
+      ]),
+      idleAction
+    ])
+
+    behaviorTreeRef.current = new BehaviorTree(root)
   }, [aiBehaviorEnabled, config, aiState.personality])
 
   // Update environmental context
@@ -512,36 +542,40 @@ export function AIBehavior({
 
     // Throttled personality-based suggestion logging (every 4s)
     const now = typeof performance !== 'undefined' ? performance.now() : Date.now()
-    if (now - lastSuggestionTimeRef.current < 4000) return
+    if (now - lastSuggestionTimeRef.current >= 4000) {
+      const available = Array.isArray((useAppStore.getState().animationInfo?.availableAnimations))
+        ? useAppStore.getState().animationInfo.availableAnimations
+        : []
 
-    const available = aiState
-      ? (Array.isArray((useAppStore.getState().animationInfo?.availableAnimations))
-          ? useAppStore.getState().animationInfo.availableAnimations
-          : [])
-      : []
-
-    if (available.length === 0 || !personalitySystemRef.current || !envAwarenessRef.current) {
+      if (available.length > 0 && personalitySystemRef.current && envAwarenessRef.current) {
+        const snapshot = envAwarenessRef.current.getSnapshot({
+          audioLevel: useAppStore.getState().audioLevel,
+          animationSpeed: useAppStore.getState().animationSpeed
+        })
+        const suggestions = personalitySystemRef.current.suggestAnimations(available, snapshot)
+        const top = suggestions[0]
+        if (top) {
+          addAiSuggestion(top.name)
+          if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') {
+            try { window.dispatchEvent(new CustomEvent('ai:suggestion', { detail: { name: top.name, weight: top.weight } })) } catch {}
+          }
+        }
+      }
       lastSuggestionTimeRef.current = now
-      return
     }
 
-    const snapshot = envAwarenessRef.current.getSnapshot({
-      audioLevel: useAppStore.getState().audioLevel,
-      animationSpeed: useAppStore.getState().animationSpeed
-    })
-
-    const suggestions = personalitySystemRef.current.suggestAnimations(available, snapshot)
-    const top = suggestions[0]
-    if (top) {
-      addAiSuggestion(top.name)
-      if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') {
-        try {
-          window.dispatchEvent(new CustomEvent('ai:suggestion', { detail: { name: top.name, weight: top.weight } }))
-        } catch {}
+    // Tick behavior tree every 2s
+    if (behaviorTreeRef.current) {
+      if (now - lastBehaviorTickRef.current >= 2000) {
+        behaviorTreeRef.current.tick({ now })
+        // Optional: if engaged and wave exists, record a hint suggestion
+        const available = useAppStore.getState().animationInfo.availableAnimations
+        if (aiState.lastDecision === 'engage' && Array.isArray(available) && available.includes('wave')) {
+          addAiSuggestion('wave')
+        }
+        lastBehaviorTickRef.current = now
       }
     }
-
-    lastSuggestionTimeRef.current = now
   })
 
   // Expose AI behavior methods globally for debugging
