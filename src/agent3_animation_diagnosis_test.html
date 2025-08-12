@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent 3 - Animation System Diagnosis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid;
+        }
+        .success { background: #1a3a1a; border-color: #4caf50; }
+        .warning { background: #3a3a1a; border-color: #ff9800; }
+        .error { background: #3a1a1a; border-color: #f44336; }
+        .info { background: #1a1a3a; border-color: #2196f3; }
+        .console {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover { background: #45a049; }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Agent 3 - Animation System Diagnosis</h1>
+        
+        <div class="status info">
+            <h3>🔍 Phase 1: Diagnosis & Investigation</h3>
+            <p>Testing animation system state and console debug analysis</p>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Console Debug Analysis</h3>
+            <button onclick="checkConsoleLogs()">Check Console Logs</button>
+            <button onclick="clearConsole()">Clear Console</button>
+            <div id="consoleOutput" class="console"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎭 Model Animation Analysis</h3>
+            <button onclick="testElmoAnimations()">Test Elmo Animations</button>
+            <button onclick="testSpidermanAnimations()">Test Spider-Man Animations</button>
+            <button onclick="checkAllModels()">Check All Models</button>
+            <div id="modelResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>⚙️ Animation System State Check</h3>
+            <button onclick="checkAnimationSystem()">Check Animation System</button>
+            <button onclick="testAnimationMixer()">Test Animation Mixer</button>
+            <button onclick="testAnimationController()">Test Animation Controller</button>
+            <div id="systemResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Manual Animation Testing</h3>
+            <button onclick="testManualAnimation()">Test Manual Animation Control</button>
+            <button onclick="testAutoPlay()">Test Auto-Play</button>
+            <button onclick="testAnimationTransitions()">Test Transitions</button>
+            <div id="manualResults"></div>
+        </div>
+    </div>
+
+    <script>
+        // Console capture
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+        const consoleOutput = document.getElementById('consoleOutput');
+
+        function captureConsole(type, ...args) {
+            const timestamp = new Date().toLocaleTimeString();
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span style="color: #888;">[${timestamp}]</span> <span style="color: ${type === 'error' ? '#ff6b6b' : type === 'warn' ? '#ffd93d' : '#6bcf7f'};">${type.toUpperCase()}:</span> ${message}`;
+            consoleOutput.appendChild(logEntry);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        console.log = (...args) => {
+            captureConsole('log', ...args);
+            originalLog.apply(console, args);
+        };
+        console.warn = (...args) => {
+            captureConsole('warn', ...args);
+            originalWarn.apply(console, args);
+        };
+        console.error = (...args) => {
+            captureConsole('error', ...args);
+            originalError.apply(console, args);
+        };
+
+        function clearConsole() {
+            consoleOutput.innerHTML = '';
+        }
+
+        function checkConsoleLogs() {
+            console.log('🎬 Agent 3: Checking console logs for animation-related messages...');
+            
+            // Look for specific animation debug messages
+            const animationMessages = [
+                '🎭 Sandbox: Found animations:',
+                '🎭 Sandbox: Animation status - mixer:',
+                '🎬 Agent 1: AnimationController initialized',
+                '🎭 Agent 3: AnimationBlender initialized',
+                '🎭 Sandbox: Model loaded successfully'
+            ];
+            
+            console.log('🎬 Agent 3: Looking for animation debug messages:', animationMessages);
+        }
+
+        function testElmoAnimations() {
+            console.log('🎬 Agent 3: Testing Elmo animations...');
+            
+            // Simulate loading Elmo model
+            const elmoModel = {
+                name: 'elmo_rigged.glb',
+                path: '/Default_Characters/elmo_rigged.glb',
+                expectedAnimations: ['idle', 'walk', 'run', 'gesture']
+            };
+            
+            console.log('🎬 Agent 3: Elmo model info:', elmoModel);
+            
+            // Check if we can access the main application
+            if (window.sandboxModelViewer) {
+                console.log('🎬 Agent 3: SandboxModelViewer available:', window.sandboxModelViewer);
+            } else {
+                console.warn('🎬 Agent 3: SandboxModelViewer not available');
+            }
+            
+            // Check animation controller
+            if (window.__ANIMATION_CONTROLLER__) {
+                console.log('🎬 Agent 3: AnimationController available:', window.__ANIMATION_CONTROLLER__);
+                const state = window.__ANIMATION_CONTROLLER__.getState();
+                console.log('🎬 Agent 3: Current animation state:', state);
+            } else {
+                console.warn('🎬 Agent 3: AnimationController not available');
+            }
+        }
+
+        function testSpidermanAnimations() {
+            console.log('🎬 Agent 3: Testing Spider-Man animations...');
+            
+            const spidermanModels = [
+                { name: 'mr_spiderman_chasm.glb', path: '/Default_Characters/mr_spiderman_chasm.glb' },
+                { name: 'Spider-Man.fbx', path: '/Default_Characters/Spider-Man.fbx' },
+                { name: 'SPIDERMAN PS4.fbx', path: '/Default_Characters/SPIDERMAN PS4.fbx' }
+            ];
+            
+            console.log('🎬 Agent 3: Spider-Man models:', spidermanModels);
+        }
+
+        function checkAllModels() {
+            console.log('🎬 Agent 3: Checking all available models...');
+            
+            const allModels = [
+                { id: 'elmo', name: 'Elmo (Stuffed Animal)', path: '/Default_Characters/elmo_rigged.glb' },
+                { id: 'spiderman_chasm', name: 'Spider-Man Chasm', path: '/Default_Characters/mr_spiderman_chasm.glb' },
+                { id: 'spiderman_suit', name: 'Spider-Man Suit', path: '/Default_Characters/New_spiderman_suit_we_0613175722_texture.fbx' },
+                { id: 'spiderman', name: 'Spider-Man', path: '/Default_Characters/Spider-Man.fbx' },
+                { id: 'spiderman_ps4', name: 'Spider-Man PS4', path: '/Default_Characters/SPIDERMAN PS4.fbx' },
+                { id: 'spiderham', name: 'Spider-Ham', path: '/Default_Characters/uploads_files_4424020_SpiderHam_Current_LW.fbx' }
+            ];
+            
+            console.log('🎬 Agent 3: All available models:', allModels);
+            
+            // Test model loading
+            allModels.forEach(model => {
+                console.log(`🎬 Agent 3: Testing model: ${model.name} (${model.id})`);
+            });
+        }
+
+        function checkAnimationSystem() {
+            console.log('🎬 Agent 3: Checking animation system state...');
+            
+            // Check for animation-related components
+            const components = {
+                sandboxModelViewer: !!window.sandboxModelViewer,
+                animationController: !!window.__ANIMATION_CONTROLLER__,
+                threeJS: !!window.THREE,
+                reactThreeFiber: !!window.ReactThreeFiber
+            };
+            
+            console.log('🎬 Agent 3: Animation system components:', components);
+            
+            // Check animation state
+            if (window.__ANIMATION_CONTROLLER__) {
+                const state = window.__ANIMATION_CONTROLLER__.getState();
+                const metrics = window.__ANIMATION_CONTROLLER__.getPerformanceMetrics();
+                console.log('🎬 Agent 3: Animation controller state:', state);
+                console.log('🎬 Agent 3: Performance metrics:', metrics);
+            }
+        }
+
+        function testAnimationMixer() {
+            console.log('🎬 Agent 3: Testing animation mixer...');
+            
+            // Check if mixer is properly initialized
+            if (window.__ANIMATION_CONTROLLER__) {
+                const state = window.__ANIMATION_CONTROLLER__.getState();
+                console.log('🎬 Agent 3: Mixer status:', {
+                    hasMixer: !!state.mixer,
+                    currentAnimation: state.currentAnimation,
+                    isPlaying: state.isPlaying,
+                    animationSpeed: state.animationSpeed
+                });
+            }
+        }
+
+        function testAnimationController() {
+            console.log('🎬 Agent 3: Testing animation controller...');
+            
+            if (window.__ANIMATION_CONTROLLER__) {
+                // Test manual state changes
+                console.log('🎬 Agent 3: Testing manual state changes...');
+                window.__ANIMATION_CONTROLLER__.setState('idle');
+                
+                // Test force animation
+                console.log('🎬 Agent 3: Testing force animation...');
+                window.__ANIMATION_CONTROLLER__.forceAnimation('idle');
+            }
+        }
+
+        function testManualAnimation() {
+            console.log('🎬 Agent 3: Testing manual animation control...');
+            
+            if (window.__ANIMATION_CONTROLLER__) {
+                // Test play/pause
+                console.log('🎬 Agent 3: Testing play/pause functionality...');
+                
+                // Test speed control
+                console.log('🎬 Agent 3: Testing speed control...');
+                
+                // Test animation selection
+                console.log('🎬 Agent 3: Testing animation selection...');
+            }
+        }
+
+        function testAutoPlay() {
+            console.log('🎬 Agent 3: Testing auto-play functionality...');
+            
+            // Check if animations start automatically
+            console.log('🎬 Agent 3: Checking auto-play status...');
+        }
+
+        function testAnimationTransitions() {
+            console.log('🎬 Agent 3: Testing animation transitions...');
+            
+            if (window.__ANIMATION_CONTROLLER__) {
+                // Test smooth transitions between animations
+                console.log('🎬 Agent 3: Testing transition between idle and walk...');
+                window.__ANIMATION_CONTROLLER__.forceAnimation('walk');
+                
+                setTimeout(() => {
+                    console.log('🎬 Agent 3: Transitioning back to idle...');
+                    window.__ANIMATION_CONTROLLER__.forceAnimation('idle');
+                }, 2000);
+            }
+        }
+
+        // Auto-run initial checks
+        window.addEventListener('load', () => {
+            console.log('🎬 Agent 3: Animation diagnosis test loaded');
+            console.log('🎬 Agent 3: Starting initial system check...');
+            
+            setTimeout(() => {
+                checkConsoleLogs();
+                checkAnimationSystem();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

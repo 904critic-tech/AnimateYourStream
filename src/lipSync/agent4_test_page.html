@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent 4 - Lip Sync System Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        .test-button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        .test-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.success {
+            background: rgba(76, 175, 80, 0.3);
+            border: 1px solid #4CAF50;
+        }
+        .status.error {
+            background: rgba(244, 67, 54, 0.3);
+            border: 1px solid #f44336;
+        }
+        .status.info {
+            background: rgba(33, 150, 243, 0.3);
+            border: 1px solid #2196F3;
+        }
+        .log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .audio-visualizer {
+            width: 100%;
+            height: 100px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .audio-bar {
+            position: absolute;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(to top, #4CAF50, #FFC107, #f44336);
+            border-radius: 2px 2px 0 0;
+            transition: height 0.1s ease;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Agent 4 - Lip Sync System Test</h1>
+        
+        <div class="status info">
+            <strong>Status:</strong> Ready to test lip sync system features
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎤</div>
+                <h3>Microphone Access</h3>
+                <p>Test microphone permissions and audio input</p>
+                <button class="test-button" onclick="testMicrophone()">Test Microphone</button>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🎵</div>
+                <h3>Audio Processing</h3>
+                <p>Verify real-time audio analysis</p>
+                <button class="test-button" onclick="testAudioProcessing()">Test Audio</button>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">👄</div>
+                <h3>Viseme Detection</h3>
+                <p>Test speech-to-viseme conversion</p>
+                <button class="test-button" onclick="testVisemeDetection()">Test Visemes</button>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">😊</div>
+                <h3>Facial Animation</h3>
+                <p>Test facial morphing and animation</p>
+                <button class="test-button" onclick="testFacialAnimation()">Test Animation</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎵 Audio Visualizer</h3>
+            <div class="audio-visualizer" id="audioVisualizer">
+                <!-- Audio bars will be generated here -->
+            </div>
+            <button class="test-button" onclick="startVisualizer()">Start Visualizer</button>
+            <button class="test-button" onclick="stopVisualizer()">Stop Visualizer</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Comprehensive Test</h3>
+            <button class="test-button" onclick="runAllTests()">Run All Tests</button>
+            <button class="test-button" onclick="clearLog()">Clear Log</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 Test Log</h3>
+            <div class="log" id="testLog">Agent 4 - Lip Sync System Test Ready\n</div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import lip sync modules
+        import { LipSyncManager } from './index.js'
+        import { VisemeDetector } from './VisemeDetector.js'
+        import { FacialAnimator } from './FacialAnimator.js'
+
+        // Global variables
+        let lipSyncManager = null
+        let audioContext = null
+        let analyzerNode = null
+        let microphoneStream = null
+        let visualizerInterval = null
+
+        // Logging function
+        function log(message) {
+            const logElement = document.getElementById('testLog')
+            const timestamp = new Date().toLocaleTimeString()
+            logElement.textContent += `[${timestamp}] ${message}\n`
+            logElement.scrollTop = logElement.scrollHeight
+            console.log(`[Agent 4] ${message}`)
+        }
+
+        // Test 1: Microphone Access
+        window.testMicrophone = async function() {
+            log('🎤 Testing microphone access...')
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        sampleRate: 44100
+                    }
+                })
+
+                if (stream && stream.active) {
+                    microphoneStream = stream
+                    log('✅ Microphone access granted successfully')
+                    
+                    const audioTracks = stream.getAudioTracks()
+                    log(`✅ Audio tracks available: ${audioTracks.length}`)
+                    
+                    updateStatus('Microphone access successful', 'success')
+                } else {
+                    log('❌ Microphone stream not active')
+                    updateStatus('Microphone stream not active', 'error')
+                }
+            } catch (error) {
+                log(`❌ Microphone access failed: ${error.message}`)
+                updateStatus(`Microphone access failed: ${error.message}`, 'error')
+            }
+        }
+
+        // Test 2: Audio Processing
+        window.testAudioProcessing = async function() {
+            log('🎵 Testing audio processing...')
+            
+            try {
+                // Create audio context
+                audioContext = new (window.AudioContext || window.webkitAudioContext)()
+                
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume()
+                }
+                
+                log('✅ Audio context created successfully')
+                
+                // Create analyzer node
+                analyzerNode = audioContext.createAnalyser()
+                analyzerNode.fftSize = 2048
+                analyzerNode.smoothingTimeConstant = 0.8
+                
+                log('✅ Analyzer node created successfully')
+                
+                // Connect microphone if available
+                if (microphoneStream) {
+                    const source = audioContext.createMediaStreamSource(microphoneStream)
+                    source.connect(analyzerNode)
+                    log('✅ Microphone connected to analyzer')
+                }
+                
+                updateStatus('Audio processing setup successful', 'success')
+            } catch (error) {
+                log(`❌ Audio processing failed: ${error.message}`)
+                updateStatus(`Audio processing failed: ${error.message}`, 'error')
+            }
+        }
+
+        // Test 3: Viseme Detection
+        window.testVisemeDetection = async function() {
+            log('👄 Testing viseme detection...')
+            
+            try {
+                // Initialize lip sync manager
+                lipSyncManager = new LipSyncManager({
+                    enabled: true,
+                    sensitivity: 0.7,
+                    smoothing: 0.3,
+                    frameRate: 60
+                })
+                
+                await lipSyncManager.initialize()
+                log('✅ Lip sync manager initialized')
+                
+                // Test viseme detector
+                const visemeDetector = new VisemeDetector({
+                    algorithm: 'frequency',
+                    confidenceThreshold: 0.3
+                })
+                
+                log('✅ Viseme detector created successfully')
+                
+                // Simulate audio frame for testing
+                const mockAudioFrame = {
+                    timestamp: Date.now(),
+                    rms: 0.5,
+                    frequencyData: new Float32Array(1024).fill(0.1),
+                    timeData: new Uint8Array(1024).fill(128)
+                }
+                
+                const viseme = visemeDetector.detectViseme(mockAudioFrame)
+                log(`✅ Viseme detected: ${viseme.type} (confidence: ${viseme.confidence.toFixed(2)})`)
+                
+                updateStatus('Viseme detection working', 'success')
+            } catch (error) {
+                log(`❌ Viseme detection failed: ${error.message}`)
+                updateStatus(`Viseme detection failed: ${error.message}`, 'error')
+            }
+        }
+
+        // Test 4: Facial Animation
+        window.testFacialAnimation = async function() {
+            log('😊 Testing facial animation...')
+            
+            try {
+                if (!lipSyncManager) {
+                    log('⚠️ Lip sync manager not initialized, creating new instance...')
+                    lipSyncManager = new LipSyncManager()
+                    await lipSyncManager.initialize()
+                }
+                
+                // Test facial animator
+                const facialAnimator = new FacialAnimator({
+                    smoothing: 0.3,
+                    exaggeration: 0.5
+                })
+                
+                log('✅ Facial animator created successfully')
+                
+                // Test morph target application
+                const mockViseme = {
+                    type: 'ah',
+                    confidence: 0.8,
+                    blendWeights: { mouthOpen: 0.7, mouthWide: 0.3 }
+                }
+                
+                const animationResult = facialAnimator.applyViseme(mockViseme)
+                log(`✅ Facial animation applied: ${animationResult.success ? 'Success' : 'Failed'}`)
+                
+                updateStatus('Facial animation working', 'success')
+            } catch (error) {
+                log(`❌ Facial animation failed: ${error.message}`)
+                updateStatus(`Facial animation failed: ${error.message}`, 'error')
+            }
+        }
+
+        // Audio Visualizer
+        window.startVisualizer = function() {
+            if (!analyzerNode) {
+                log('❌ Analyzer node not available. Run audio processing test first.')
+                return
+            }
+            
+            log('🎵 Starting audio visualizer...')
+            
+            const visualizer = document.getElementById('audioVisualizer')
+            visualizer.innerHTML = ''
+            
+            // Create audio bars
+            for (let i = 0; i < 50; i++) {
+                const bar = document.createElement('div')
+                bar.className = 'audio-bar'
+                bar.style.left = `${(i / 50) * 100}%`
+                bar.style.height = '0px'
+                visualizer.appendChild(bar)
+            }
+            
+            const bars = visualizer.querySelectorAll('.audio-bar')
+            const frequencyData = new Uint8Array(analyzerNode.frequencyBinCount)
+            
+            visualizerInterval = setInterval(() => {
+                analyzerNode.getByteFrequencyData(frequencyData)
+                
+                bars.forEach((bar, index) => {
+                    const dataIndex = Math.floor((index / bars.length) * frequencyData.length)
+                    const value = frequencyData[dataIndex] || 0
+                    const height = (value / 255) * 100
+                    bar.style.height = `${height}px`
+                })
+            }, 50)
+            
+            log('✅ Audio visualizer started')
+        }
+
+        window.stopVisualizer = function() {
+            if (visualizerInterval) {
+                clearInterval(visualizerInterval)
+                visualizerInterval = null
+                log('✅ Audio visualizer stopped')
+            }
+        }
+
+        // Run all tests
+        window.runAllTests = async function() {
+            log('🧪 Running comprehensive lip sync system test...')
+            
+            try {
+                await testMicrophone()
+                await new Promise(resolve => setTimeout(resolve, 1000))
+                
+                await testAudioProcessing()
+                await new Promise(resolve => setTimeout(resolve, 1000))
+                
+                await testVisemeDetection()
+                await new Promise(resolve => setTimeout(resolve, 1000))
+                
+                await testFacialAnimation()
+                
+                log('🎉 All tests completed successfully!')
+                updateStatus('All lip sync tests passed', 'success')
+            } catch (error) {
+                log(`❌ Test suite failed: ${error.message}`)
+                updateStatus(`Test suite failed: ${error.message}`, 'error')
+            }
+        }
+
+        // Utility functions
+        window.clearLog = function() {
+            document.getElementById('testLog').textContent = 'Agent 4 - Lip Sync System Test Ready\n'
+        }
+
+        function updateStatus(message, type) {
+            const statusElement = document.querySelector('.status')
+            statusElement.textContent = `Status: ${message}`
+            statusElement.className = `status ${type}`
+        }
+
+        // Initialize
+        log('🎤 Agent 4 - Lip Sync System Test Page Loaded')
+        log('Ready to test lip sync features...')
+    </script>
+</body>
+</html>

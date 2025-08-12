@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent 5 - Smart Diagnostics Test Page</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .status-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .status-card h3 {
+            margin: 0 0 15px 0;
+            color: #ffd700;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-active { background: #4CAF50; }
+        .status-warning { background: #FF9800; }
+        .status-error { background: #f44336; }
+        .status-inactive { background: #9e9e9e; }
+        .log-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .log-info { background: rgba(33, 150, 243, 0.2); }
+        .log-success { background: rgba(76, 175, 80, 0.2); }
+        .log-warning { background: rgba(255, 152, 0, 0.2); }
+        .log-error { background: rgba(244, 67, 54, 0.2); }
+        .button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .metric {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Agent 5 - Smart Diagnostics Test Page</h1>
+            <p>Real-time monitoring and error coordination system</p>
+        </div>
+
+        <div class="status-grid">
+            <div class="status-card">
+                <h3>📊 System Status</h3>
+                <div id="systemStatus">
+                    <span class="status-indicator status-inactive"></span>
+                    Initializing...
+                </div>
+                <div id="healthScore" class="metric-value">--</div>
+                <div class="metric-label">Health Score</div>
+            </div>
+
+            <div class="status-card">
+                <h3>🚨 Critical Issues</h3>
+                <div id="criticalIssues">
+                    <span class="status-indicator status-inactive"></span>
+                    Monitoring...
+                </div>
+                <div id="issueCount" class="metric-value">--</div>
+                <div class="metric-label">Active Issues</div>
+            </div>
+
+            <div class="status-card">
+                <h3>📈 Error Metrics</h3>
+                <div id="errorMetrics">
+                    <span class="status-indicator status-inactive"></span>
+                    Collecting...
+                </div>
+                <div id="errorRate" class="metric-value">--</div>
+                <div class="metric-label">Errors/min</div>
+            </div>
+        </div>
+
+        <div class="metrics">
+            <div class="metric">
+                <div id="uploadSystemStatus" class="metric-value">--</div>
+                <div class="metric-label">Upload System</div>
+            </div>
+            <div class="metric">
+                <div id="characterSwitchingStatus" class="metric-value">--</div>
+                <div class="metric-label">Character Switching</div>
+            </div>
+            <div class="metric">
+                <div id="animationSystemStatus" class="metric-value">--</div>
+                <div class="metric-label">Animation System</div>
+            </div>
+            <div class="metric">
+                <div id="totalErrors" class="metric-value">--</div>
+                <div class="metric-label">Total Errors</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 20px 0;">
+            <button class="button" onclick="startMonitoring()">🚀 Start Monitoring</button>
+            <button class="button" onclick="runValidationTest()">🧪 Run Validation Test</button>
+            <button class="button" onclick="generateReport()">📋 Generate Report</button>
+            <button class="button" onclick="clearLog()">🗑️ Clear Log</button>
+        </div>
+
+        <div class="log-container" id="logContainer">
+            <div class="log-entry log-info">🔍 Agent 5: Smart Diagnostics Test Page loaded</div>
+            <div class="log-entry log-info">📊 Initializing monitoring systems...</div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Agent 5 monitoring functions
+        import { 
+            startAgent5LiveMonitoring, 
+            getAgent5MonitoringData,
+            stopAgent5LiveMonitoring 
+        } from './agent5_live_monitoring.js';
+        
+        import { 
+            startAgent5ErrorAnalysis, 
+            getAgent5Summary 
+        } from './agent5_error_analysis.js';
+        
+        import { 
+            runAgent5ValidationTest, 
+            runAgent5SystemTest 
+        } from './agent5_validation_test.js';
+
+        let monitoringActive = false;
+        let updateInterval = null;
+
+        // Global functions for button clicks
+        window.startMonitoring = async function() {
+            if (monitoringActive) {
+                addLog('⚠️ Monitoring already active', 'warning');
+                return;
+            }
+
+            try {
+                addLog('🚀 Starting Agent 5 monitoring systems...', 'info');
+                
+                // Start error analysis
+                startAgent5ErrorAnalysis();
+                addLog('✅ Error analysis started', 'success');
+                
+                // Start live monitoring
+                startAgent5LiveMonitoring();
+                addLog('✅ Live monitoring started', 'success');
+                
+                monitoringActive = true;
+                
+                // Start update interval
+                updateInterval = setInterval(updateStatus, 2000);
+                
+                addLog('🎯 Agent 5 monitoring systems active', 'success');
+                
+            } catch (error) {
+                addLog(`❌ Failed to start monitoring: ${error.message}`, 'error');
+            }
+        };
+
+        window.runValidationTest = async function() {
+            try {
+                addLog('🧪 Running Agent 5 validation test...', 'info');
+                
+                const result = await runAgent5ValidationTest();
+                
+                addLog(`📊 Validation test completed - Status: ${result.status}`, 'success');
+                addLog(`📈 System Health: ${result.systemHealth}%`, 'info');
+                addLog(`🚨 Critical Issues: ${result.criticalIssues.length}`, 'info');
+                
+                if (result.recommendations.length > 0) {
+                    result.recommendations.forEach(rec => {
+                        addLog(`💡 ${rec}`, 'warning');
+                    });
+                }
+                
+            } catch (error) {
+                addLog(`❌ Validation test failed: ${error.message}`, 'error');
+            }
+        };
+
+        window.generateReport = function() {
+            try {
+                const monitoringData = getAgent5MonitoringData();
+                const errorSummary = getAgent5Summary();
+                
+                const report = {
+                    timestamp: new Date().toISOString(),
+                    monitoringData,
+                    errorSummary,
+                    recommendations: monitoringData.recommendations
+                };
+                
+                addLog('📋 Generated comprehensive report', 'success');
+                addLog(`📊 Report data: ${JSON.stringify(report, null, 2)}`, 'info');
+                
+                // Download report
+                const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `agent5_report_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+            } catch (error) {
+                addLog(`❌ Report generation failed: ${error.message}`, 'error');
+            }
+        };
+
+        window.clearLog = function() {
+            document.getElementById('logContainer').innerHTML = '';
+            addLog('🗑️ Log cleared', 'info');
+        };
+
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function updateStatus() {
+            try {
+                const monitoringData = getAgent5MonitoringData();
+                const errorSummary = getAgent5Summary();
+
+                // Update system status
+                const systemStatusEl = document.getElementById('systemStatus');
+                const healthScoreEl = document.getElementById('healthScore');
+                const statusIndicator = systemStatusEl.querySelector('.status-indicator');
+                
+                healthScoreEl.textContent = `${monitoringData.healthScore}%`;
+                
+                if (monitoringData.systemStatus === 'healthy') {
+                    systemStatusEl.innerHTML = '<span class="status-indicator status-active"></span>Healthy';
+                    statusIndicator.className = 'status-indicator status-active';
+                } else if (monitoringData.systemStatus === 'degraded') {
+                    systemStatusEl.innerHTML = '<span class="status-indicator status-warning"></span>Degraded';
+                    statusIndicator.className = 'status-indicator status-warning';
+                } else {
+                    systemStatusEl.innerHTML = '<span class="status-indicator status-error"></span>Critical';
+                    statusIndicator.className = 'status-indicator status-error';
+                }
+
+                // Update critical issues
+                const criticalIssuesEl = document.getElementById('criticalIssues');
+                const issueCountEl = document.getElementById('issueCount');
+                const activeIssues = monitoringData.criticalIssues.filter(issue => issue.errorCount > 0);
+                
+                issueCountEl.textContent = activeIssues.length;
+                
+                if (activeIssues.length === 0) {
+                    criticalIssuesEl.innerHTML = '<span class="status-indicator status-active"></span>No Critical Issues';
+                } else {
+                    criticalIssuesEl.innerHTML = `<span class="status-indicator status-error"></span>${activeIssues.length} Critical Issues`;
+                }
+
+                // Update error metrics
+                const errorMetricsEl = document.getElementById('errorMetrics');
+                const errorRateEl = document.getElementById('errorRate');
+                
+                errorRateEl.textContent = errorSummary.errorRate?.toFixed(1) || '0.0';
+                errorMetricsEl.innerHTML = '<span class="status-indicator status-active"></span>Monitoring';
+
+                // Update individual system statuses
+                const uploadIssue = monitoringData.criticalIssues.find(issue => issue.type === 'upload_system');
+                const switchingIssue = monitoringData.criticalIssues.find(issue => issue.type === 'character_switching');
+                const animationIssue = monitoringData.criticalIssues.find(issue => issue.type === 'animation_system');
+
+                document.getElementById('uploadSystemStatus').textContent = uploadIssue?.errorCount > 0 ? '🚨' : '✅';
+                document.getElementById('characterSwitchingStatus').textContent = switchingIssue?.errorCount > 0 ? '🚨' : '✅';
+                document.getElementById('animationSystemStatus').textContent = animationIssue?.errorCount > 0 ? '🚨' : '✅';
+                document.getElementById('totalErrors').textContent = errorSummary.totalErrors || 0;
+
+            } catch (error) {
+                addLog(`❌ Status update failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-start monitoring after page load
+        setTimeout(() => {
+            addLog('🔄 Auto-starting Agent 5 monitoring...', 'info');
+            startMonitoring();
+        }, 2000);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+            if (monitoringActive) {
+                stopAgent5LiveMonitoring();
+            }
+        });
+    </script>
+</body>
+</html>

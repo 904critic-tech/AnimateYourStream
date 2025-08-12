@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Advanced 3D Model Viewer with AI-powered features and real-time lip sync" />
+    <title>AnimateYourStream</title>
+    
+    <!-- Phase 3: Production Performance & CDN Optimization -->
+    <!-- DNS Prefetch for external resources -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+    
+    <!-- Preconnect to critical origins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="/src/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    
+    <!-- Resource hints for performance -->
+    <meta name="theme-color" content="#0ea5e9">
+    <meta name="color-scheme" content="dark light">
+    
+    <!-- Cache control headers -->
+    <meta http-equiv="Cache-Control" content="public, max-age=31536000, immutable">
+    
+    <!-- Performance monitoring -->
+    <script>
+      // Critical performance monitoring
+      window.PERFORMANCE_START = performance.now();
+      window.LOAD_METRICS = {
+        navigationStart: performance.timing.navigationStart,
+        domContentLoaded: 0,
+        windowLoad: 0,
+        firstPaint: 0,
+        firstContentfulPaint: 0
+      };
+      
+      // Track FCP and other metrics
+      if ('PerformanceObserver' in window) {
+        new PerformanceObserver((list) => {
+          list.getEntries().forEach((entry) => {
+            if (entry.name === 'first-contentful-paint') {
+              window.LOAD_METRICS.firstContentfulPaint = entry.startTime;
+            }
+          });
+        }).observe({ entryTypes: ['paint'] });
+      }
+    </script>
+    <style>
+      /* Prevent FOUC and ensure full height */
+      html, body, #root {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        font-family: 'Inter', system-ui, sans-serif;
+      }
+      
+      /* Loading screen */
+      .loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #0ea5e9, #0284c7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div class="loading-screen">
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

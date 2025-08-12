@@ -1,0 +1,43 @@
+{
+  "generatedAt": "2025-08-12T12:32:11.759Z",
+  "models": {
+    "elmo": [
+      {
+        "name": "Defeated",
+        "path": "/Default_Characters/Elmo_Animations/Defeated.fbx"
+      },
+      {
+        "name": "Falling",
+        "path": "/Default_Characters/Elmo_Animations/Falling.fbx"
+      },
+      {
+        "name": "Flair",
+        "path": "/Default_Characters/Elmo_Animations/Flair.fbx"
+      },
+      {
+        "name": "Happy Idle",
+        "path": "/Default_Characters/Elmo_Animations/Happy Idle.fbx"
+      },
+      {
+        "name": "Playing Drums",
+        "path": "/Default_Characters/Elmo_Animations/Playing Drums.fbx"
+      },
+      {
+        "name": "Rejected",
+        "path": "/Default_Characters/Elmo_Animations/Rejected.fbx"
+      },
+      {
+        "name": "Rumba Dancing",
+        "path": "/Default_Characters/Elmo_Animations/Rumba Dancing.fbx"
+      },
+      {
+        "name": "Run Look Back",
+        "path": "/Default_Characters/Elmo_Animations/Run Look Back.fbx"
+      },
+      {
+        "name": "Unarmed Idle 01",
+        "path": "/Default_Characters/Elmo_Animations/Unarmed Idle 01.fbx"
+      }
+    ]
+  }
+}

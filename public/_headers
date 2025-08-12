@@ -1,0 +1,56 @@
+# Netlify Headers for CDN Optimization
+# Phase 3 - Production Deployment
+
+# Cache static assets for 1 year
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Cache JavaScript and CSS with content hashing
+*.js
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Encoding: gzip, br
+
+*.css
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Encoding: gzip, br
+
+# Cache fonts for 1 year
+*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Encoding: gzip
+
+*.woff
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Encoding: gzip
+
+# Cache images with longer duration
+*.png
+  Cache-Control: public, max-age=86400
+  Content-Encoding: gzip
+
+*.jpg
+  Cache-Control: public, max-age=86400
+  Content-Encoding: gzip
+
+*.webp
+  Cache-Control: public, max-age=86400
+  Content-Encoding: gzip
+
+*.svg
+  Cache-Control: public, max-age=86400
+  Content-Encoding: gzip
+
+# Main HTML - short cache for updates
+/*.html
+  Cache-Control: public, max-age=300, must-revalidate
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: accelerometer=(), autoplay=(), camera=(), encrypted-media=(), gyroscope=(), microphone=(), payment=(), usb=()
+
+# Security headers for all pages
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' *.sentry.io; worker-src 'self'

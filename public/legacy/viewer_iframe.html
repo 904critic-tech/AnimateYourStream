@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/legacy/vendor/three.module.js"
+        }
+      }
+    </script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Viewer Iframe</title>
+    <style>
+      html, body { margin: 0; padding: 0; height: 100%; background: #000; }
+      #overlay { position: fixed; top: 8px; right: 8px; color: #0f0; font: 12px monospace; z-index: 10; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <div id="overlay"></div>
+    <canvas id="c" style="width:100vw;height:100vh;display:block"></canvas>
+    <script type="module">
+      import * as THREE from 'three';
+      (async function() {
+        const overlay = document.getElementById('overlay');
+        function sendLog(message) {
+          try { window.parent.postMessage({ scope: 'sandbox', type: 'iframeLog', message }, '*'); } catch (e) {}
+          if (overlay) overlay.textContent = message;
+          console.log('[viewer_iframe]', message);
+        }
+
+        // Import local modules (no external domains)
+        let GLTFLoaderMod = null, FBXLoaderMod = null, GLTFExporterMod = null, OrbitControlsMod = null;
+        let DRACOLoaderMod = null, KTX2LoaderMod = null, MeshoptDecoderMod = null;
+        const base = '/legacy/vendor';
+        try { await import(`${base}/examples/jsm/libs/fflate.module.js`); } catch (e) { sendLog('fflate import failed: ' + e.message); }
+        try { GLTFLoaderMod = await import(`${base}/examples/jsm/loaders/GLTFLoader.js`); } catch (e) { sendLog('GLTFLoader import failed: ' + e.message); }
+        try { FBXLoaderMod = await import(`${base}/examples/jsm/loaders/FBXLoader.js`); } catch (e) { sendLog('FBXLoader import failed: ' + e.message); }
+        try { GLTFExporterMod = await import(`${base}/examples/jsm/exporters/GLTFExporter.js`); } catch (e) { sendLog('GLTFExporter import failed: ' + e.message); }
+        try { OrbitControlsMod = await import(`${base}/examples/jsm/controls/OrbitControls.js`); } catch (e) { sendLog('OrbitControls import failed: ' + e.message); }
+        try { DRACOLoaderMod = await import(`${base}/examples/jsm/loaders/DRACOLoader.js`); } catch (e) { /* optional */ }
+        try { KTX2LoaderMod = await import(`${base}/examples/jsm/loaders/KTX2Loader.js`); } catch (e) { /* optional */ }
+        try { MeshoptDecoderMod = await import(`${base}/examples/jsm/libs/meshopt_decoder.module.js`); } catch (e) { /* optional */ }
+
+        const canvas = document.getElementById('c');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x101018);
+        const camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+        camera.position.set(0, 1.6, 3);
+        let controls = null;
+        function ensureControls() {
+          // Support either named or default export
+          const OC = (OrbitControlsMod && (OrbitControlsMod.OrbitControls || OrbitControlsMod.default)) || null;
+          if (!controls && OC) {
+            try { controls = new OC(camera, renderer.domElement); controls.enableDamping = true; } catch (e) { sendLog('OrbitControls unavailable'); }
+          }
+        }
+        const hemi = new THREE.HemisphereLight(0xffffff, 0x222244, 1.0); scene.add(hemi);
+        const dir = new THREE.DirectionalLight(0xffffff, 0.8); dir.position.set(3, 5, 2); scene.add(dir);
+        // Placeholder cube so user sees render immediately
+        const phGeom = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+        const phMat = new THREE.MeshStandardMaterial({ color: 0x4488ff, metalness: 0.2, roughness: 0.6 });
+        const placeholder = new THREE.Mesh(phGeom, phMat);
+        placeholder.position.set(0, 1.2, 0);
+        scene.add(placeholder);
+
+        let currentRoot = null;
+        let markers = [];
+        let skeletonHelper = null;
+        let skeletonRoot = null;
+        // Guided autorigger state
+        let guidedLabels = null; // sequence of labels to place
+        let guidedIndex = 0;
+        const markersByName = Object.create(null);
+        let mixer = null;
+        let currentAnimations = [];
+        let currentModelRadius = 1;
+        let currentSkeleton = null;
+        const clock = new THREE.Clock();
+
+        function frameObject(object3d) {
+          try {
+            const box = new THREE.Box3().setFromObject(object3d);
+            if (box.isEmpty()) return;
+            const center = new THREE.Vector3();
+            const sphere = new THREE.Sphere();
+            box.getCenter(center);
+            box.getBoundingSphere(sphere);
+            currentModelRadius = sphere.radius || 1;
+            // Recenter object around origin so controls target can be 0,0,0
+            object3d.position.sub(center);
+            ensureControls();
+            if (controls) controls.target.set(0, 0, 0);
+            const fov = camera.fov * Math.PI / 180;
+            let distance = sphere.radius / Math.tan(fov * 0.5);
+            if (!isFinite(distance) || distance <= 0) distance = 3;
+            camera.position.set(0, sphere.radius * 0.5, distance * 1.5);
+            camera.lookAt(0, 0, 0);
+          } catch (e) { sendLog('frame failed: ' + e.message); }
+        }
+
+        function clearAll() {
+          try {
+            markers.forEach(m => { scene.remove(m); m.geometry?.dispose?.(); m.material?.dispose?.(); });
+            markers = [];
+            for (const k in markersByName) { delete markersByName[k]; }
+            if (skeletonHelper) { scene.remove(skeletonHelper); skeletonHelper = null; }
+            if (skeletonRoot) {
+              try { skeletonRoot.parent?.remove(skeletonRoot); } catch(_) {}
+              skeletonRoot = null;
+            }
+            currentSkeleton = null;
+            if (currentRoot) { scene.remove(currentRoot); currentRoot = null; }
+            sendLog('cleared');
+          } catch (e) { sendLog('clear failed: ' + e.message); }
+        }
+
+        function resetMarkersOnly() {
+          try {
+            markers.forEach(m => { scene.remove(m); m.geometry?.dispose?.(); m.material?.dispose?.(); });
+            markers = [];
+            for (const k in markersByName) { delete markersByName[k]; }
+            guidedLabels = null; guidedIndex = 0;
+            if (skeletonHelper) { scene.remove(skeletonHelper); skeletonHelper = null; }
+            if (skeletonRoot) { try { skeletonRoot.parent?.remove(skeletonRoot); } catch(_) {} skeletonRoot = null; }
+            currentSkeleton = null;
+            sendLog('markers reset');
+          } catch (e) { sendLog('markers reset failed: ' + e.message); }
+        }
+
+        function placeMarker(worldPos, label) {
+          const r = Math.max(0.002, Math.min(0.02, (currentModelRadius || 1) * 0.005));
+          const geom = new THREE.SphereGeometry(r, 16, 16);
+          const colorMap = { Hips: 0x00ff88, Chest: 0x00ccff, Head: 0xffff33, Neck: 0xffee77,
+            LeftShoulder: 0x3399ff, LeftElbow: 0x66ccff, LeftWrist: 0x9966ff,
+            RightShoulder: 0xff6633, RightElbow: 0xff9966, RightWrist: 0xff33aa,
+            LeftKnee: 0xffcc33, LeftAnkle: 0xff9933, RightKnee: 0xcc9933, RightAnkle: 0xcc6633 };
+          const mat = new THREE.MeshBasicMaterial({ color: colorMap[label] || 0xffaa00, depthTest: false, depthWrite: false });
+          const mesh = new THREE.Mesh(geom, mat);
+          mesh.renderOrder = 999;
+          mesh.position.copy(worldPos);
+          mesh.userData.label = label || null;
+          scene.add(mesh);
+          markers.push(mesh);
+          if (label) markersByName[label] = mesh;
+          if (label) sendLog('Placed: ' + label);
+          else sendLog('marker placed #' + markers.length);
+        }
+
+        const raycaster = new THREE.Raycaster();
+        const ndc = new THREE.Vector2();
+        canvas.addEventListener('click', (ev) => {
+          if (!placing) return;
+          const rect = canvas.getBoundingClientRect();
+          ndc.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+          ndc.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+          raycaster.setFromCamera(ndc, camera);
+          let placed = false;
+          try {
+            if (currentRoot) {
+              const hits = raycaster.intersectObject(currentRoot, true);
+              if (hits && hits.length > 0) {
+                const hit = hits[0];
+                const pos = hit.point.clone();
+                // Offset slightly toward the camera so the marker is not hidden inside geometry
+                pos.addScaledVector(raycaster.ray.direction, -0.01);
+                const nextLabel = guidedLabels && guidedIndex < guidedLabels.length ? guidedLabels[guidedIndex] : null;
+                placeMarker(pos, nextLabel);
+                if (guidedLabels && guidedIndex < guidedLabels.length) {
+                  guidedIndex++;
+                  if (guidedIndex < guidedLabels.length) {
+                    sendLog('Place: ' + guidedLabels[guidedIndex]);
+                  } else {
+                    placing = false;
+                    sendLog('Markers complete');
+                  }
+                }
+                placed = true;
+              }
+            }
+          } catch (_) {}
+          if (!placed) {
+            const plane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
+            const pt = new THREE.Vector3();
+            raycaster.ray.intersectPlane(plane, pt);
+            const nextLabel = guidedLabels && guidedIndex < guidedLabels.length ? guidedLabels[guidedIndex] : null;
+            placeMarker(pt, nextLabel);
+            if (guidedLabels && guidedIndex < guidedLabels.length) {
+              guidedIndex++;
+              if (guidedIndex < guidedLabels.length) {
+                sendLog('Place: ' + guidedLabels[guidedIndex]);
+              } else {
+                placing = false;
+                sendLog('Markers complete');
+              }
+            }
+          }
+        });
+
+        let placing = false;
+
+        function buildSkeletonFromMarkers() {
+          try {
+            if (skeletonHelper) { scene.remove(skeletonHelper); skeletonHelper = null; }
+            skeletonRoot = null;
+            // Fit to current model bounds and parent under current model to inherit transforms
+            let size = new THREE.Vector3(1, 1, 1);
+            let min = new THREE.Vector3(-0.5, -0.5, -0.5);
+            let max = new THREE.Vector3(0.5, 0.5, 0.5);
+            let center = new THREE.Vector3(0, 0, 0);
+            if (currentRoot) {
+              const box = new THREE.Box3().setFromObject(currentRoot);
+              min.copy(box.min); max.copy(box.max); box.getSize(size); box.getCenter(center);
+            }
+            // If markers exist, fit skeleton to marker bbox in currentRoot local space
+            let useMarkers = false;
+            let mMin = new THREE.Vector3(), mMax = new THREE.Vector3(), mSize = new THREE.Vector3(), mCenter = new THREE.Vector3();
+            if (markers.length > 0) {
+              const localPts = markers.map((m) => {
+                const wp = m.position.clone();
+                return currentRoot ? currentRoot.worldToLocal(wp) : wp;
+              });
+              const mbox = new THREE.Box3();
+              localPts.forEach((p) => mbox.expandByPoint(p));
+              mMin.copy(mbox.min); mMax.copy(mbox.max); mbox.getSize(mSize); mbox.getCenter(mCenter);
+              // Consider valid if height is non-trivial
+              if (isFinite(mSize.y) && mSize.y > 1e-4) useMarkers = true;
+            }
+            const refSize = useMarkers ? mSize : size;
+            const refCenter = useMarkers ? mCenter : center;
+            const s = Math.max(0.2, Math.min(2.5, refSize.y || currentModelRadius || 1));
+            const bones = [];
+            const makeBone = (name, pos) => { const bone = new THREE.Bone(); bone.name = name; bone.position.copy(pos); bones.push(bone); return bone; };
+            const getLocal = (label) => {
+              const m = markersByName[label];
+              if (!m) return null;
+              const p = m.position.clone();
+              return currentRoot ? currentRoot.worldToLocal(p) : p;
+            };
+            const baseMinY = useMarkers ? mMin.y : min.y;
+            const baseCenterX = refCenter.x;
+            const baseCenterZ = refCenter.z;
+            const hipsY = baseMinY + 0.48 * (refSize.y || 1);
+            let spineY = hipsY + 0.20 * (refSize.y || 1);
+            let chestY = spineY + 0.20 * (refSize.y || 1);
+            let neckY = chestY + 0.20 * (refSize.y || 1);
+            let headY = neckY + 0.15 * (refSize.y || 1);
+            const shoulderX = 0.20 * (refSize.x || s * 0.5);
+            const elbowDX = 0.30 * (refSize.x || s * 0.5);
+            const elbowDY = 0.15 * (refSize.y || 1);
+            const wristDX = 0.20 * (refSize.x || s * 0.5);
+            const wristDY = 0.10 * (refSize.y || 1);
+            const legX = 0.10 * (refSize.x || s * 0.5);
+            const upperLegDY = 0.40 * (refSize.y || 1);
+            const kneeDY = 0.35 * (refSize.y || 1);
+            const ankleDY = 0.35 * (refSize.y || 1);
+
+            // Clamp vertical span to the reference bbox
+            const maxY = baseMinY + (refSize.y || 1);
+            if (headY > maxY) {
+              const overflow = headY - maxY;
+              spineY -= overflow;
+              chestY -= overflow;
+              neckY -= overflow;
+              headY -= overflow;
+            }
+            if (hipsY < baseMinY) {
+              const under = baseMinY - hipsY;
+              spineY += under;
+              chestY += under;
+              neckY += under;
+              headY += under;
+            }
+
+            const hipsLocal = getLocal('Hips') || new THREE.Vector3(baseCenterX, hipsY, baseCenterZ);
+            const chestLocal = getLocal('Chest') || new THREE.Vector3(baseCenterX, chestY, baseCenterZ);
+            const neckLocal = getLocal('Neck') || new THREE.Vector3(baseCenterX, neckY, baseCenterZ);
+            const headLocal = getLocal('Head') || new THREE.Vector3(baseCenterX, headY, baseCenterZ);
+            const lShoulderLocal = getLocal('LeftShoulder') || new THREE.Vector3(baseCenterX - shoulderX, chestLocal.y + 0.05 * (refSize.y || 1), baseCenterZ);
+            const rShoulderLocal = getLocal('RightShoulder') || new THREE.Vector3(baseCenterX + shoulderX, chestLocal.y + 0.05 * (refSize.y || 1), baseCenterZ);
+            const lElbowLocal = getLocal('LeftElbow') || lShoulderLocal.clone().add(new THREE.Vector3(-elbowDX, -elbowDY, 0));
+            const rElbowLocal = getLocal('RightElbow') || rShoulderLocal.clone().add(new THREE.Vector3(elbowDX, -elbowDY, 0));
+            const lWristLocal = getLocal('LeftWrist') || lElbowLocal.clone().add(new THREE.Vector3(-wristDX, -wristDY, 0));
+            const rWristLocal = getLocal('RightWrist') || rElbowLocal.clone().add(new THREE.Vector3(wristDX, -wristDY, 0));
+            const lKneeLocal = getLocal('LeftKnee') || new THREE.Vector3(baseCenterX - legX, hipsY - kneeDY, baseCenterZ);
+            const rKneeLocal = getLocal('RightKnee') || new THREE.Vector3(baseCenterX + legX, hipsY - kneeDY, baseCenterZ);
+            const lAnkleLocal = getLocal('LeftAnkle') || new THREE.Vector3(lKneeLocal.x, lKneeLocal.y - ankleDY, lKneeLocal.z);
+            const rAnkleLocal = getLocal('RightAnkle') || new THREE.Vector3(rKneeLocal.x, rKneeLocal.y - ankleDY, rKneeLocal.z);
+
+            const root = makeBone('Hips', hipsLocal);
+            const spine = makeBone('Spine', chestLocal.clone().sub(hipsLocal)); root.add(spine);
+            const chest = makeBone('Chest', neckLocal.clone().sub(chestLocal)); spine.add(chest);
+            const neck = makeBone('Neck', headLocal.clone().sub(neckLocal)); chest.add(neck);
+            const head = makeBone('Head', new THREE.Vector3(0, 0, 0)); neck.add(head);
+            const lShoulder = makeBone('LeftShoulder', lShoulderLocal.clone().sub(chestLocal)); chest.add(lShoulder);
+            const lElbow = makeBone('LeftElbow', lElbowLocal.clone().sub(lShoulderLocal)); lShoulder.add(lElbow);
+            const lWrist = makeBone('LeftWrist', lWristLocal.clone().sub(lElbowLocal)); lElbow.add(lWrist);
+            const rShoulder = makeBone('RightShoulder', rShoulderLocal.clone().sub(chestLocal)); chest.add(rShoulder);
+            const rElbow = makeBone('RightElbow', rElbowLocal.clone().sub(rShoulderLocal)); rShoulder.add(rElbow);
+            const rWrist = makeBone('RightWrist', rWristLocal.clone().sub(rElbowLocal)); rElbow.add(rWrist);
+            const lUpperLeg = makeBone('LeftUpperLeg', lKneeLocal.clone().sub(hipsLocal)); root.add(lUpperLeg);
+            const lKnee = makeBone('LeftKnee', lAnkleLocal.clone().sub(lKneeLocal)); lUpperLeg.add(lKnee);
+            const lAnkle = makeBone('LeftAnkle', new THREE.Vector3(0, 0, 0)); lKnee.add(lAnkle);
+            const rUpperLeg = makeBone('RightUpperLeg', rKneeLocal.clone().sub(hipsLocal)); root.add(rUpperLeg);
+            const rKnee = makeBone('RightKnee', rAnkleLocal.clone().sub(rKneeLocal)); rUpperLeg.add(rKnee);
+            const rAnkle = makeBone('RightAnkle', new THREE.Vector3(0, 0, 0)); rKnee.add(rAnkle);
+
+            const skeleton = new THREE.Skeleton(bones);
+            // Parent skeleton to current model so transforms match
+            if (currentRoot) currentRoot.add(root); else scene.add(root);
+            const helper = new THREE.SkeletonHelper(root);
+            helper.material.depthTest = false;
+            helper.material.depthWrite = false;
+            helper.material.transparent = true;
+            helper.material.opacity = 1.0;
+            helper.material.color?.set?.(0x00ff88);
+            helper.frustumCulled = false;
+            helper.renderOrder = 999999;
+            helper.traverse((o)=>{ o.renderOrder = 999999; });
+            scene.add(helper);
+            try { helper.update(); } catch(_) {}
+            skeletonHelper = helper;
+            skeletonRoot = root;
+            currentSkeleton = skeleton;
+            sendLog('skeleton generated');
+            // Attempt lightweight skin bind
+            bindSkeletonToCurrentModel();
+          } catch (e) {
+            sendLog('skeleton failed: ' + e.message);
+          }
+        }
+
+        function bindSkeletonToCurrentModel() {
+          try {
+            if (!currentRoot || !currentSkeleton || !Array.isArray(currentSkeleton.bones) || currentSkeleton.bones.length === 0) {
+              sendLog('bind skipped: missing model or skeleton');
+              return;
+            }
+            const bones = currentSkeleton.bones;
+            const boneWorld = bones.map(() => new THREE.Vector3());
+            bones.forEach((b, i) => b.getWorldPosition(boneWorld[i]));
+            const tmp = new THREE.Vector3();
+            const parent = new THREE.Object3D();
+            currentRoot.traverse((child) => {
+              if (!(child && child.isMesh && child.geometry)) return;
+              if (child.isSkinnedMesh) return;
+              const geom = child.geometry;
+              const pos = geom.attributes.position;
+              if (!pos) return;
+              const vcount = pos.count;
+              const skinIndex = new Uint16Array(vcount * 4);
+              const skinWeight = new Float32Array(vcount * 4);
+              const boneLocal = boneWorld.map((bw) => child.worldToLocal(bw.clone()));
+              for (let i = 0; i < vcount; i++) {
+                tmp.fromBufferAttribute(pos, i);
+                // find 4 nearest bones
+                const nearest = [];
+                for (let bi = 0; bi < boneLocal.length; bi++) {
+                  const d = tmp.distanceToSquared(boneLocal[bi]);
+                  nearest.push([bi, d]);
+                }
+                nearest.sort((a,b)=>a[1]-b[1]);
+                const pick = nearest.slice(0, 4);
+                let wsum = 0;
+                const weights = pick.map(([,d]) => 1.0 / Math.max(1e-6, Math.sqrt(d)));
+                for (const w of weights) wsum += w;
+                for (let k = 0; k < 4; k++) {
+                  const idx = i*4 + k;
+                  const bi = pick[k] ? pick[k][0] : 0;
+                  const w = pick[k] ? (weights[k] / (wsum || 1)) : (k===0?1:0);
+                  skinIndex[idx] = bi;
+                  skinWeight[idx] = w;
+                }
+              }
+              geom.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(skinIndex, 4));
+              geom.setAttribute('skinWeight', new THREE.Float32BufferAttribute(skinWeight, 4));
+              const skinned = new THREE.SkinnedMesh(geom, child.material);
+              skinned.name = child.name;
+              skinned.position.copy(child.position);
+              skinned.quaternion.copy(child.quaternion);
+              skinned.scale.copy(child.scale);
+              skinned.castShadow = child.castShadow;
+              skinned.receiveShadow = child.receiveShadow;
+              // Replace in graph
+              const p = child.parent || parent;
+              p.add(skinned);
+              child.removeFromParent();
+              try { skinned.bind(currentSkeleton); skinned.normalizeSkinWeights(); } catch (_) {}
+            });
+            sendLog('auto weights bound');
+          } catch (e) {
+            sendLog('bind failed: ' + e.message);
+          }
+        }
+
+        function playIdle() {
+          // Prefer real animation clips if present
+          try {
+            if (mixer && currentAnimations && currentAnimations.length > 0) {
+              mixer.stopAllAction();
+              const idle = currentAnimations.find(c => /idle/i.test(c.name)) || currentAnimations[0];
+              const action = mixer.clipAction(idle, currentRoot);
+              action.reset().fadeIn(0.2).play();
+              sendLog('clip playing: ' + (idle?.name || 'first'));
+              return;
+            }
+          } catch (e) { /* fall through to sway */ }
+          // Fallback: simple idle sway if no clips
+          const t0 = performance.now();
+          function sway() {
+            const t = (performance.now() - t0) * 0.001;
+            if (currentRoot) currentRoot.rotation.y = Math.sin(t * 0.5) * 0.05;
+            requestAnimationFrame(sway);
+          }
+          sway();
+          sendLog('idle sway');
+        }
+
+        function getExtensionFromName(nameOrUrl) {
+          try {
+            if (!nameOrUrl) return '';
+            const q = nameOrUrl.split('?')[0];
+            const hash = q.split('#')[0];
+            const base = hash.split('/').pop() || hash;
+            const idx = base.lastIndexOf('.');
+            return idx >= 0 ? base.slice(idx + 1).toLowerCase() : '';
+          } catch { return ''; }
+        }
+
+        async function sniffBlobType(url) {
+          try {
+            const resp = await fetch(url);
+            const buf = await resp.arrayBuffer();
+            const bytes = new Uint8Array(buf.slice(0, 32));
+            const ascii = Array.from(bytes).map(c => (c >= 32 && c <= 126 ? String.fromCharCode(c) : ' ')).join('');
+            if (ascii.startsWith('glTF') || ascii.includes('glTF')) return 'glb';
+            if (/Kaydara FBX Binary/i.test(ascii)) return 'fbx';
+            const firstNonWs = ascii.trimStart()[0];
+            if (firstNonWs === '{' || firstNonWs === '[') return 'gltf';
+            return '';
+          } catch { return ''; }
+        }
+
+        async function loadModel(url, manifest, name) {
+          try {
+            sendLog('load begin: ' + (url || ''));          
+            const previousRoot = currentRoot;
+            const previousMixer = mixer;
+            let obj = null;
+            currentAnimations = [];
+            // Loaders may not be present in legacy THREE; log gracefully
+            ensureControls();
+            let ext = getExtensionFromName(name) || getExtensionFromName(url);
+            if (!ext && url && url.startsWith('blob:')) {
+              ext = await sniffBlobType(url);
+              if (ext) sendLog('sniffed blob type: ' + ext);
+            }
+            if (ext === 'fbx') {
+              if (FBXLoaderMod && FBXLoaderMod.FBXLoader) {
+                const loader = new FBXLoaderMod.FBXLoader();
+                obj = await new Promise((resolve, reject) => loader.load(url, resolve, undefined, reject));
+                try { currentAnimations = Array.isArray(obj.animations) ? obj.animations : []; } catch (_) { currentAnimations = []; }
+              } else {
+                sendLog('FBXLoader unavailable');
+              }
+            } else if (ext === 'glb' || ext === 'gltf') {
+              if (GLTFLoaderMod && GLTFLoaderMod.GLTFLoader) {
+                const loader = new GLTFLoaderMod.GLTFLoader();
+                try {
+                  if (DRACOLoaderMod && (DRACOLoaderMod.DRACOLoader || DRACOLoaderMod.default)) {
+                    const DRACO = DRACOLoaderMod.DRACOLoader || DRACOLoaderMod.default;
+                    const draco = new DRACO();
+                    draco.setDecoderPath(`${base}/examples/jsm/libs/draco/`);
+                    loader.setDRACOLoader(draco);
+                  }
+                  if (KTX2LoaderMod && (KTX2LoaderMod.KTX2Loader || KTX2LoaderMod.default)) {
+                    const KTX2 = KTX2LoaderMod.KTX2Loader || KTX2LoaderMod.default;
+                    const ktx2 = new KTX2();
+                    ktx2.setTranscoderPath(`${base}/examples/jsm/libs/basis/`).detectSupport(renderer);
+                    loader.setKTX2Loader(ktx2);
+                  }
+                  if (MeshoptDecoderMod) {
+                    const MeshoptDecoder = MeshoptDecoderMod.MeshoptDecoder || MeshoptDecoderMod.default || null;
+                    if (MeshoptDecoder) loader.setMeshoptDecoder(MeshoptDecoder);
+                  }
+                  // If manifest map provided, remap external resource URLs
+                  if (manifest && typeof manifest === 'object') {
+                    const lower = Object.create(null);
+                    for (const k in manifest) { lower[k.toLowerCase()] = manifest[k]; }
+                    const originalResolveURL = loader.manager.resolveURL.bind(loader.manager);
+                    loader.manager.resolveURL = function(urlFromAsset) {
+                      const last = urlFromAsset.split('/').pop();
+                      const tryKeys = [urlFromAsset, urlFromAsset.toLowerCase(), last, last?.toLowerCase()];
+                      for (const k of tryKeys) { if (k && lower[k]) return lower[k]; if (k && manifest[k]) return manifest[k]; }
+                      return originalResolveURL(urlFromAsset);
+                    };
+                  }
+                } catch (_) {}
+                // Preflight blob URL to validate accessibility and size (debug aid)
+                try {
+                  if (url && url.startsWith('blob:')) {
+                    const resp = await fetch(url);
+                    const buf = await resp.arrayBuffer();
+                    sendLog('glb bytes: ' + buf.byteLength);
+                  }
+                } catch (e) { sendLog('glb preflight failed: ' + (e?.message || '')); }
+                const gltf = await new Promise((resolve, reject) => loader.load(
+                  url,
+                  resolve,
+                  (evt) => { try { if (evt && evt.total) sendLog('glb progress: ' + evt.loaded + '/' + evt.total); } catch (_) {} },
+                  (err) => {
+                    try {
+                      const msg = (err && (err.message || err.toString && err.toString())) || 'gltf load error';
+                      sendLog('glb load error: ' + msg);
+                    } catch(_) { sendLog('glb load error'); }
+                    reject(err || new Error('gltf load error'));
+                  }
+                ));
+                obj = gltf.scene || gltf.scenes?.[0] || null;
+                try { currentAnimations = Array.isArray(gltf.animations) ? gltf.animations : []; } catch (_) { currentAnimations = []; }
+                try { sendLog('gltf stats: scenes=' + (gltf.scenes?.length||0) + ', anims=' + (currentAnimations?.length||0)); } catch (_) {}
+                if (!obj && currentAnimations.length > 0) {
+                  // Animation-only GLB: apply to current model if available
+                  if (currentRoot) {
+                    try {
+                      mixer = mixer || new THREE.AnimationMixer(currentRoot);
+                      mixer.stopAllAction();
+                      const clip = currentAnimations.find(c => /idle/i.test(c.name)) || currentAnimations[0];
+                      mixer.clipAction(clip, currentRoot).reset().fadeIn(0.2).play();
+                      sendLog('animation-only file applied to current model: ' + (clip?.name || 'clip'));
+                    } catch (e) {
+                      sendLog('animation-only apply failed: ' + e.message);
+                    }
+                  } else {
+                    sendLog('animation-only file but no current model to apply to');
+                  }
+                }
+              } else {
+                sendLog('GLTFLoader unavailable');
+              }
+            }
+            const addedNew = !!obj;
+            if (obj) {
+              obj.updateMatrixWorld(true);
+              frameObject(obj);
+              if (placeholder) scene.remove(placeholder);
+              scene.add(obj); currentRoot = obj;
+              // Initialize mixer for clips if present
+              try {
+                if (currentAnimations && currentAnimations.length > 0) {
+                  mixer = new THREE.AnimationMixer(currentRoot);
+                  const first = currentAnimations[0];
+                  mixer.stopAllAction();
+                  mixer.clipAction(first, currentRoot).play();
+                  sendLog('model loaded with clips: ' + currentAnimations.length);
+            } else {
+                  mixer = null;
+                  sendLog('model loaded');
+                }
+              } catch (e) { mixer = null; sendLog('animation init failed: ' + e.message); }
+              // After successful swap, dispose previous
+              try {
+                if (previousMixer) previousMixer.stopAllAction();
+                if (previousRoot && previousRoot !== obj) {
+                  scene.remove(previousRoot);
+                  previousRoot.traverse((o) => {
+                    if (o.geometry && typeof o.geometry.dispose === 'function') o.geometry.dispose();
+                    if (o.material) {
+                      const mats = Array.isArray(o.material) ? o.material : [o.material];
+                      mats.forEach((m) => m && typeof m.dispose === 'function' && m.dispose());
+                    }
+                  });
+                }
+              } catch (_) {}
+            }
+            // Log if unchanged
+            const unchanged = !addedNew;
+            sendLog('load end' + (!currentRoot ? ' (no object)' : (unchanged ? ' (unchanged)' : '')));
+          } catch (e) {
+            sendLog('load failed: ' + e.message);
+          }
+        }
+
+        window.addEventListener('message', (ev) => {
+          const data = ev.data;
+          if (!data || typeof data !== 'object') return;
+          if (data.scope !== 'sandbox') return; // ignore out-of-scope messages
+          if (data.type === 'loadModel' && data.url) loadModel(data.url, data.manifest, data.name);
+          if (data.type === 'uiAction') {
+            if (data.action === 'placeMarkers') {
+              placing = true; sendLog('placeMarkers ON');
+              // If guidance not initialized, start a default sequence
+              if (!guidedLabels || !guidedLabels.length) {
+                guidedLabels = ['Hips','Chest','Head','LeftShoulder','LeftElbow','LeftWrist','RightShoulder','RightElbow','RightWrist','LeftKnee','LeftAnkle','RightKnee','RightAnkle'];
+                guidedIndex = 0;
+                sendLog('Place: ' + guidedLabels[0]);
+              }
+            }
+            if (data.action === 'resetMarkers') { resetMarkersOnly(); }
+            if (data.action === 'toggleSkeleton') { if (skeletonHelper) { skeletonHelper.visible = !skeletonHelper.visible; sendLog('skeleton ' + (skeletonHelper.visible?'shown':'hidden')); } }
+            if (data.action === 'startGuided') {
+              try {
+                guidedLabels = Array.isArray(data.labels) && data.labels.length ? data.labels.slice(0) : ['Hips','Chest','Head','LeftShoulder','LeftElbow','LeftWrist','RightShoulder','RightElbow','RightWrist','LeftKnee','LeftAnkle','RightKnee','RightAnkle'];
+                guidedIndex = 0;
+                placing = true;
+                sendLog('Place: ' + guidedLabels[0]);
+              } catch (_) { placing = true; }
+            }
+            if (data.action === 'autoWeights') { buildSkeletonFromMarkers(); placing = false; }
+            if (data.action === 'playIdle') { playIdle(); }
+            if (data.action === 'stop') { /* idle is procedural; no-op */ sendLog('stop (idle procedural)'); }
+            if (data.action === 'saveGlb') {
+              try {
+                if (!GLTFExporterMod || !GLTFExporterMod.GLTFExporter) throw new Error('GLTFExporter unavailable');
+                const exporter = new GLTFExporterMod.GLTFExporter();
+                const target = currentRoot || scene;
+                const opts = { binary: true, includeCustomExtensions: true, onlyVisible: true, embedImages: true };
+                exporter.parse(target, (result) => {
+                  try {
+                    let blob; let filename;
+                    if (result && (result instanceof ArrayBuffer || ArrayBuffer.isView(result))) {
+                      const buffer = result instanceof ArrayBuffer ? result : result.buffer;
+                      blob = new Blob([buffer], { type: 'model/gltf-binary' });
+                      filename = 'rigged.glb';
+                    } else if (typeof result === 'object') {
+                      const json = JSON.stringify(result);
+                      blob = new Blob([json], { type: 'model/gltf+json' });
+                      filename = 'rigged.gltf';
+                    } else if (typeof result === 'string') {
+                      blob = new Blob([result], { type: 'model/gltf+json' });
+                      filename = 'rigged.gltf';
+                    } else {
+                      throw new Error('Unexpected export result');
+                    }
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = filename;
+                    a.click();
+                  } catch (err) {
+                    sendLog('export build failed: ' + (err?.message || err));
+                  }
+                }, opts);
+                sendLog('export requested');
+              } catch (e) { sendLog('export failed: ' + e.message); }
+            }
+            if (data.action === 'clear') { clearAll(); }
+          }
+        });
+
+        function onResize() {
+          const w = canvas.clientWidth, h = canvas.clientHeight;
+          renderer.setSize(w, h, false);
+          camera.aspect = w / h; camera.updateProjectionMatrix();
+        }
+        window.addEventListener('resize', onResize);
+        onResize();
+
+        (function render() {
+          const delta = clock.getDelta();
+          try { if (mixer) mixer.update(delta); } catch (_) {}
+          if (controls) controls.update();
+          renderer.render(scene, camera);
+          requestAnimationFrame(render);
+        })();
+
+        sendLog('viewer ready');
+        // Auto-load default FBX shortly after ready
+        setTimeout(() => {
+          if (!currentRoot) loadModel('/models/Default_Model.fbx');
+        }, 800);
+      })();
+    </script>
+  </body>
+  </html>
+
+

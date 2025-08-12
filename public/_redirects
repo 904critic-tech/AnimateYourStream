@@ -1,0 +1,12 @@
+# Netlify Redirects for SPA
+# Phase 3 - Production Deployment
+
+# Handle client-side routing
+/*    /index.html   200
+
+# Redirect old URLs (if any)
+/app/*  /  301
+/viewer/*  /  301
+
+# Force HTTPS
+http://mixamo-viewer.netlify.app/*  https://mixamo-viewer.netlify.app/:splat  301!

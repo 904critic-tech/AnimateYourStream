@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent 5 - Error Analysis Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 5px;
+        }
+        .test-button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background: #005a9e;
+        }
+        .error-button {
+            background: #d32f2f;
+        }
+        .warning-button {
+            background: #f57c00;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background: #2a2a2a;
+            border-radius: 3px;
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+    </style>
+</head>
+<body>
+    <h1>🎖️ Agent 5 - Error Analysis Test</h1>
+    
+    <div class="test-section">
+        <h2>Error Analysis Status</h2>
+        <div id="status" class="status">Initializing...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Error Generation</h2>
+        <button class="test-button error-button" onclick="generateError()">Generate Console Error</button>
+        <button class="test-button warning-button" onclick="generateWarning()">Generate Console Warning</button>
+        <button class="test-button" onclick="generateNetworkError()">Generate Network Error</button>
+        <button class="test-button" onclick="generateWebGLError()">Generate WebGL Error</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Error Analysis Results</h2>
+        <div id="results" class="status">Waiting for analysis...</div>
+    </div>
+
+    <script type="module">
+        // Import Agent 5 error analysis
+        import { startAgent5ErrorAnalysis, getAgent5Analysis, getAgent5Summary } from './agent5_error_analysis.js';
+        import { runAgent5ErrorAnalysis, getAgent5Status } from './agent5_test_runner.js';
+
+        // Make functions globally available
+        window.agent5Analysis = {
+            start: startAgent5ErrorAnalysis,
+            getAnalysis: getAgent5Analysis,
+            getSummary: getAgent5Summary,
+            runAnalysis: runAgent5ErrorAnalysis,
+            getStatus: getAgent5Status
+        };
+
+        // Start error analysis
+        async function initializeAgent5() {
+            try {
+                console.log('🔍 Agent 5: Starting error analysis test...');
+                
+                // Start the analysis
+                await runAgent5ErrorAnalysis();
+                
+                // Update status
+                document.getElementById('status').innerHTML = 
+                    '<span class="success">✅ Agent 5 Error Analysis Active</span>';
+                
+                // Start periodic updates
+                setInterval(updateResults, 2000);
+                
+                console.log('✅ Agent 5: Error analysis test initialized successfully');
+                
+            } catch (error) {
+                console.error('❌ Agent 5: Failed to initialize:', error);
+                document.getElementById('status').innerHTML = 
+                    '<span class="error">❌ Agent 5 Initialization Failed: ' + error.message + '</span>';
+            }
+        }
+
+        // Update results display
+        function updateResults() {
+            try {
+                const status = getAgent5Status();
+                const summary = getAgent5Summary();
+                
+                let resultsHtml = '<h3>Current Status:</h3>';
+                resultsHtml += '<p><strong>Analysis Running:</strong> ' + (status.isRunning ? 'Yes' : 'No') + '</p>';
+                resultsHtml += '<p><strong>Duration:</strong> ' + Math.round(status.duration / 1000) + ' seconds</p>';
+                
+                if (summary) {
+                    resultsHtml += '<h3>Error Summary:</h3>';
+                    resultsHtml += '<p><strong>Total Errors:</strong> ' + summary.totalErrors + '</p>';
+                    resultsHtml += '<p><strong>Critical Errors:</strong> ' + summary.criticalErrors + '</p>';
+                    resultsHtml += '<p><strong>Asset 404s:</strong> ' + summary.asset404s + '</p>';
+                    resultsHtml += '<p><strong>WebGL Issues:</strong> ' + summary.webglIssues + '</p>';
+                    resultsHtml += '<p><strong>Performance Issues:</strong> ' + summary.performanceIssues + '</p>';
+                    resultsHtml += '<p><strong>Health Score:</strong> ' + summary.healthScore + '%</p>';
+                    resultsHtml += '<p><strong>Error Rate:</strong> ' + summary.errorRate.toFixed(2) + ' errors/min</p>';
+                }
+                
+                document.getElementById('results').innerHTML = resultsHtml;
+                
+            } catch (error) {
+                console.error('❌ Agent 5: Failed to update results:', error);
+                document.getElementById('results').innerHTML = 
+                    '<span class="error">❌ Failed to update results: ' + error.message + '</span>';
+            }
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', initializeAgent5);
+    </script>
+
+    <script>
+        // Test error generation functions
+        function generateError() {
+            console.error('🧪 Test Error: This is a test error generated by Agent 5 test page');
+            console.log('✅ Generated test error - should be captured by Agent 5');
+        }
+
+        function generateWarning() {
+            console.warn('⚠️ Test Warning: This is a test warning generated by Agent 5 test page');
+            console.log('✅ Generated test warning - should be captured by Agent 5');
+        }
+
+        function generateNetworkError() {
+            // Try to fetch a non-existent resource
+            fetch('/non-existent-resource-test')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network error test');
+                    }
+                })
+                .catch(error => {
+                    console.log('✅ Generated network error - should be captured by Agent 5');
+                });
+        }
+
+        function generateWebGLError() {
+            // Try to create a WebGL context with invalid parameters
+            const canvas = document.createElement('canvas');
+            try {
+                const gl = canvas.getContext('webgl', { 
+                    antialias: false,
+                    depth: false,
+                    stencil: false,
+                    alpha: false,
+                    preserveDrawingBuffer: false,
+                    powerPreference: 'default',
+                    failIfMajorPerformanceCaveat: true,
+                    desynchronized: true
+                });
+                
+                if (gl) {
+                    // Force a WebGL error
+                    gl.getError(); // Clear any existing errors
+                    gl.enable(999999); // Invalid enum
+                    const error = gl.getError();
+                    if (error !== gl.NO_ERROR) {
+                        console.error('🧪 WebGL Test Error: Invalid WebGL operation');
+                        console.log('✅ Generated WebGL error - should be captured by Agent 5');
+                    }
+                }
+            } catch (error) {
+                console.error('🧪 WebGL Test Error:', error.message);
+                console.log('✅ Generated WebGL error - should be captured by Agent 5');
+            }
+        }
+    </script>
+</body>
+</html>

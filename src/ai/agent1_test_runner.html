@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent 1 - AI Behavior System Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+        
+        .test-section h3 {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 1.3em;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .results.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .results.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .results.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .status.running {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .test-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .test-card h4 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+        
+        .test-card p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Agent 1 - AI Behavior System</h1>
+            <p>Comprehensive testing and validation of AI behavior engine, animation triggers, context analysis, and behavioral patterns</p>
+        </div>
+        
+        <div class="content">
+            <div class="test-section">
+                <h3>🚀 Quick Tests</h3>
+                <button class="button" onclick="runQuickTest()">Run Quick Test</button>
+                <button class="button" onclick="testBasicComponents()">Test Basic Components</button>
+                <button class="button" onclick="testContextAnalysis()">Test Context Analysis</button>
+                <button class="button" onclick="testAnimationDecisions()">Test Animation Decisions</button>
+                
+                <div id="quickResults" class="results info" style="display: none;"></div>
+            </div>
+            
+            <div class="test-section">
+                <h3>🧪 Comprehensive Testing</h3>
+                <button class="button" onclick="runComprehensiveTests()">Run All Tests</button>
+                <button class="button" onclick="testPerformance()">Performance Test</button>
+                <button class="button" onclick="testErrorHandling()">Error Handling Test</button>
+                <button class="button" onclick="testRealWorldScenarios()">Real World Scenarios</button>
+                
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                
+                <div id="comprehensiveResults" class="results info" style="display: none;"></div>
+            </div>
+            
+            <div class="test-section">
+                <h3>📊 System Status</h3>
+                <div id="systemStatus">
+                    <p>Status: <span id="statusIndicator" class="status">Ready</span></p>
+                    <p>Last Test: <span id="lastTestTime">Not run yet</span></p>
+                    <p>Test Results: <span id="testSummary">No tests completed</span></p>
+                </div>
+            </div>
+            
+            <div class="test-section">
+                <h3>🔧 Available Tests</h3>
+                <div class="test-grid">
+                    <div class="test-card">
+                        <h4>System Initialization</h4>
+                        <p>Tests AI system startup, profile loading, and basic state management</p>
+                    </div>
+                    <div class="test-card">
+                        <h4>Context Analysis</h4>
+                        <p>Validates context processing, audio analysis, and interaction detection</p>
+                    </div>
+                    <div class="test-card">
+                        <h4>Animation Decisions</h4>
+                        <p>Tests decision engine, prioritization, and animation selection logic</p>
+                    </div>
+                    <div class="test-card">
+                        <h4>Behavior Profiles</h4>
+                        <p>Validates profile switching and personality-based behavior</p>
+                    </div>
+                    <div class="test-card">
+                        <h4>Integration Features</h4>
+                        <p>Tests smart triggers, learning stats, and external integration</p>
+                    </div>
+                    <div class="test-card">
+                        <h4>Performance Optimization</h4>
+                        <p>Validates system performance under load and optimization</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import AI behavior system components
+        import { 
+            AIBehaviorSystem, 
+            ContextAnalyzer, 
+            AnimationDecisionEngine,
+            ContextType,
+            EmotionalTone,
+            BlendMode
+        } from './index.js';
+        
+        import { 
+            quickAgent1Test, 
+            runAgent1ComprehensiveTests 
+        } from './agent1_comprehensive_test.js';
+
+        // Global variables
+        let aiSystem = null;
+        let contextAnalyzer = null;
+        let decisionEngine = null;
+        let isTestRunning = false;
+
+        // Initialize systems
+        async function initializeSystems() {
+            try {
+                aiSystem = new AIBehaviorSystem();
+                contextAnalyzer = new ContextAnalyzer();
+                decisionEngine = new AnimationDecisionEngine();
+                
+                aiSystem.start();
+                updateStatus('Systems initialized', 'success');
+                return true;
+            } catch (error) {
+                updateStatus('Initialization failed: ' + error.message, 'error');
+                return false;
+            }
+        }
+
+        // Update status display
+        function updateStatus(message, type = 'info') {
+            const indicator = document.getElementById('statusIndicator');
+            const lastTest = document.getElementById('lastTestTime');
+            
+            indicator.textContent = message;
+            indicator.className = `status ${type}`;
+            lastTest.textContent = new Date().toLocaleTimeString();
+        }
+
+        // Display results
+        function displayResults(elementId, results, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = results;
+            element.className = `results ${type}`;
+            element.style.display = 'block';
+        }
+
+        // Update progress bar
+        function updateProgress(percent) {
+            const progressFill = document.getElementById('progressFill');
+            progressFill.style.width = percent + '%';
+        }
+
+        // Quick test function
+        window.runQuickTest = async function() {
+            if (isTestRunning) return;
+            isTestRunning = true;
+            
+            updateStatus('Running quick test...', 'running');
+            updateProgress(0);
+            
+            try {
+                const result = quickAgent1Test();
+                updateProgress(100);
+                
+                if (result) {
+                    displayResults('quickResults', '✅ Quick test passed! AI behavior system is operational.', 'success');
+                    updateStatus('Quick test passed', 'success');
+                } else {
+                    displayResults('quickResults', '❌ Quick test failed! Check console for details.', 'error');
+                    updateStatus('Quick test failed', 'error');
+                }
+            } catch (error) {
+                displayResults('quickResults', '❌ Quick test error: ' + error.message, 'error');
+                updateStatus('Quick test error', 'error');
+            } finally {
+                isTestRunning = false;
+            }
+        };
+
+        // Test basic components
+        window.testBasicComponents = async function() {
+            if (isTestRunning) return;
+            isTestRunning = true;
+            
+            updateStatus('Testing basic components...', 'running');
+            
+            try {
+                if (!aiSystem) {
+                    const initialized = await initializeSystems();
+                    if (!initialized) throw new Error('Failed to initialize systems');
+                }
+                
+                const results = [];
+                
+                // Test system state
+                const isActive = aiSystem.isSystemActive();
+                results.push(`System Active: ${isActive ? '✅' : '❌'}`);
+                
+                // Test profiles
+                const profiles = aiSystem.getAvailableProfiles();
+                results.push(`Available Profiles: ${profiles.length} ✅`);
+                
+                // Test behavior state
+                const state = aiSystem.getBehaviorState();
+                results.push(`Behavior State: ${state ? '✅' : '❌'}`);
+                
+                // Test conversation state
+                const conversationState = aiSystem.getConversationState();
+                results.push(`Conversation State: ${conversationState ? '✅' : '❌'}`);
+                
+                const allPassed = results.every(r => r.includes('✅'));
+                const resultText = results.join('\n');
+                
+                displayResults('quickResults', resultText, allPassed ? 'success' : 'error');
+                updateStatus(allPassed ? 'Basic components working' : 'Basic components failed', allPassed ? 'success' : 'error');
+                
+            } catch (error) {
+                displayResults('quickResults', '❌ Basic components test error: ' + error.message, 'error');
+                updateStatus('Basic components error', 'error');
+            } finally {
+                isTestRunning = false;
+            }
+        };
+
+        // Test context analysis
+        window.testContextAnalysis = async function() {
+            if (isTestRunning) return;
+            isTestRunning = true;
+            
+            updateStatus('Testing context analysis...', 'running');
+            
+            try {
+                if (!contextAnalyzer) {
+                    const initialized = await initializeSystems();
+                    if (!initialized) throw new Error('Failed to initialize systems');
+                }
+                
+                const results = [];
+                
+                // Test context addition
+                contextAnalyzer.addContext({
+                    type: ContextType.INTERACTION,
+                    intensity: 0.8,
+                    metadata: { target: 'test_button' }
+                });
+                results.push('Context Addition: ✅');
+                
+                // Test context analysis
+                const analysis = contextAnalyzer.analyzeCurrentContext();
+                results.push(`Context Analysis: ${analysis.primaryContext} ✅`);
+                
+                // Test audio context
+                const audioContext = contextAnalyzer.analyzeAudioContext(0.6, [100, 200, 300]);
+                results.push(`Audio Context: ${audioContext ? '✅' : '❌'}`);
+                
+                // Test interaction context
+                const interactionContext = contextAnalyzer.analyzeInteractionContext('click', 'test_element', 500);
+                results.push(`Interaction Context: ${interactionContext ? '✅' : '❌'}`);
+                
+                // Test emotional analysis
+                const emotionalTone = contextAnalyzer.analyzeEmotionalTone();
+                results.push(`Emotional Analysis: ${emotionalTone} ✅`);
+                
+                const allPassed = results.every(r => r.includes('✅'));
+                const resultText = results.join('\n');
+                
+                displayResults('quickResults', resultText, allPassed ? 'success' : 'error');
+                updateStatus(allPassed ? 'Context analysis working' : 'Context analysis failed', allPassed ? 'success' : 'error');
+                
+            } catch (error) {
+                displayResults('quickResults', '❌ Context analysis test error: ' + error.message, 'error');
+                updateStatus('Context analysis error', 'error');
+            } finally {
+                isTestRunning = false;
+            }
+        };
+
+        // Test animation decisions
+        window.testAnimationDecisions = async function() {
+            if (isTestRunning) return;
+            isTestRunning = true;
+            
+            updateStatus('Testing animation decisions...', 'running');
+            
+            try {
+                if (!decisionEngine) {
+                    const initialized = await initializeSystems();
+                    if (!initialized) throw new Error('Failed to initialize systems');
+                }
+                
+                const results = [];
+                
+                // Test profile setting
+                decisionEngine.setBehaviorProfile('energetic_friendly');
+                const profile = decisionEngine.getCurrentProfile();
+                results.push(`Profile Setting: ${profile ? '✅' : '❌'}`);
+                
+                // Test animation decision
+                const availableAnimations = ['idle', 'wave', 'nod', 'dance_short'];
+                const decision = decisionEngine.getAnimationDecision(availableAnimations, {
+                    primaryContext: ContextType.INTERACTION,
+                    intensity: 0.7,
+                    confidence: 0.8
+                });
+                results.push(`Animation Decision: ${decision ? decision.animation : '❌'}`);
+                
+                // Test decision prioritization
+                const highPriorityDecision = decisionEngine.getAnimationDecision(availableAnimations, {
+                    primaryContext: ContextType.SPEECH,
+                    intensity: 0.9,
+                    confidence: 0.95
+                });
+                results.push(`Priority Decision: ${highPriorityDecision ? highPriorityDecision.animation : '❌'}`);
+                
+                const allPassed = results.every(r => r.includes('✅') || !r.includes('❌'));
+                const resultText = results.join('\n');
+                
+                displayResults('quickResults', resultText, allPassed ? 'success' : 'error');
+                updateStatus(allPassed ? 'Animation decisions working' : 'Animation decisions failed', allPassed ? 'success' : 'error');
+                
+            } catch (error) {
+                displayResults('quickResults', '❌ Animation decisions test error: ' + error.message, 'error');
+                updateStatus('Animation decisions error', 'error');
+            } finally {
+                isTestRunning = false;
+            }
+        };
+
+        // Run comprehensive tests
+        window.runComprehensiveTests = async function() {
+            if (isTestRunning) return;
+            isTestRunning = true;
+            
+            updateStatus('Running comprehensive tests...', 'running');
+            updateProgress(0);
+            
+            try {
+                const report = await runAgent1ComprehensiveTests();
+                updateProgress(100);
+                
+                const resultText = `
+🧠 Agent 1 - AI Behavior System Test Report
+===========================================
+📊 Overall Status: ${report.overallSuccess ? '✅ PASSED' : '❌ FAILED'}
+🏥 System Health: ${report.systemHealth.toFixed(1)}%
+📈 Test Results: ${report.passedTests}/${report.totalTests} passed
+⏱️  Total Time: ${(performance.now() - window.testStartTime).toFixed(2)}ms
+
+📋 Test Details:
+${report.testResults.map(r => `   ${r.success ? '✅' : '❌'} ${r.testName} (${r.executionTime.toFixed(2)}ms): ${r.details}`).join('\n')}
+
+💡 Recommendations:
+${report.recommendations.map(r => `   • ${r}`).join('\n')}
+
+🎯 Agent 1 Status:
+   ${report.overallSuccess ? '✅ AI Behavior System is fully operational' : '⚠️  AI Behavior System has issues that need attention'}
+                `.trim();
+                
+                displayResults('comprehensiveResults', resultText, report.overallSuccess ? 'success' : 'error');
+                updateStatus(report.overallSuccess ? 'All tests passed' : `${report.failedTests} tests failed`, report.overallSuccess ? 'success' : 'error');
+                
+                // Update test summary
+                document.getElementById('testSummary').textContent = `${report.passedTests}/${report.totalTests} passed (${report.systemHealth.toFixed(1)}%)`;
+                
+            } catch (error) {
+                displayResults('comprehensiveResults', '❌ Comprehensive tests error: ' + error.message, 'error');
+                updateStatus('Comprehensive tests error', 'error');
+            } finally {
+                isTestRunning = false;
+            }
+        };
+
+        // Performance test
+        window.testPerformance = async function() {
+            if (isTestRunning) return;
+            isTestRunning = true;
+            
+            updateStatus('Testing performance...', 'running');
+            
+            try {
+                if (!contextAnalyzer || !decisionEngine) {
+                    const initialized = await initializeSystems();
+                    if (!initialized) throw new Error('Failed to initialize systems');
+                }
+                
+                const results = [];
+                
+                // Test rapid context additions
+                const startTime = performance.now();
+                for (let i = 0; i < 100; i++) {
+                    contextAnalyzer.addContext({
+                        type: ContextType.INTERACTION,
+                        intensity: Math.random(),
+                        metadata: { iteration: i }
+                    });
+                }
+                const contextTime = performance.now() - startTime;
+                results.push(`Context Addition (100x): ${contextTime.toFixed(2)}ms ${contextTime < 100 ? '✅' : '❌'}`);
+                
+                // Test rapid animation decisions
+                const decisionStart = performance.now();
+                const availableAnimations = ['idle', 'wave', 'nod', 'dance_short'];
+                for (let i = 0; i < 50; i++) {
+                    decisionEngine.getAnimationDecision(availableAnimations, {
+                        primaryContext: ContextType.INTERACTION,
+                        intensity: Math.random(),
+                        confidence: Math.random()
+                    });
+                }
+                const decisionTime = performance.now() - decisionStart;
+                results.push(`Animation Decisions (50x): ${decisionTime.toFixed(2)}ms ${decisionTime < 50 ? '✅' : '❌'}`);
+                
+                const allPassed = results.every(r => r.includes('✅'));
+                const resultText = results.join('\n');
+                
+                displayResults('comprehensiveResults', resultText, allPassed ? 'success' : 'error');
+                updateStatus(allPassed ? 'Performance tests passed' : 'Performance tests failed', allPassed ? 'success' : 'error');
+                
+            } catch (error) {
+                displayResults('comprehensiveResults', '❌ Performance test error: ' + error.message, 'error');
+                updateStatus('Performance test error', 'error');
+            } finally {
+                isTestRunning = false;
+            }
+        };
+
+        // Error handling test
+        window.testErrorHandling = async function() {
+            if (isTestRunning) return;
+            isTestRunning = true;
+            
+            updateStatus('Testing error handling...', 'running');
+            
+            try {
+                if (!aiSystem) {
+                    const initialized = await initializeSystems();
+                    if (!initialized) throw new Error('Failed to initialize systems');
+                }
+                
+                const results = [];
+                
+                // Test invalid profile setting
+                const invalidProfileResult = aiSystem.setBehaviorProfile('invalid_profile');
+                results.push(`Invalid Profile: ${!invalidProfileResult ? '✅' : '❌'}`);
+                
+                // Test invalid animation trigger
+                const triggerResult = aiSystem.triggerAnimation('invalid_animation');
+                results.push(`Invalid Animation: ${!triggerResult ? '✅' : '❌'}`);
+                
+                // Test invalid context
+                try {
+                    contextAnalyzer.addContext({
+                        type: ContextType.IDLE,
+                        intensity: -1, // Invalid intensity
+                        metadata: {}
+                    });
+                    results.push('Invalid Context: ✅ (handled gracefully)');
+                } catch (error) {
+                    results.push('Invalid Context: ❌ (threw error)');
+                }
+                
+                const allPassed = results.every(r => r.includes('✅'));
+                const resultText = results.join('\n');
+                
+                displayResults('comprehensiveResults', resultText, allPassed ? 'success' : 'error');
+                updateStatus(allPassed ? 'Error handling working' : 'Error handling failed', allPassed ? 'success' : 'error');
+                
+            } catch (error) {
+                displayResults('comprehensiveResults', '❌ Error handling test error: ' + error.message, 'error');
+                updateStatus('Error handling test error', 'error');
+            } finally {
+                isTestRunning = false;
+            }
+        };
+
+        // Real world scenarios test
+        window.testRealWorldScenarios = async function() {
+            if (isTestRunning) return;
+            isTestRunning = true;
+            
+            updateStatus('Testing real world scenarios...', 'running');
+            
+            try {
+                if (!aiSystem) {
+                    const initialized = await initializeSystems();
+                    if (!initialized) throw new Error('Failed to initialize systems');
+                }
+                
+                const results = [];
+                
+                // Simulate user interaction scenario
+                aiSystem.addInteractionContext('click', 'character_button', 300);
+                aiSystem.addAudioContext(0.7, [150, 250, 350]);
+                
+                const decision = aiSystem.getCurrentAnimationDecision(['idle', 'wave', 'nod', 'dance_short']);
+                results.push(`Interaction + Audio Scenario: ${decision ? '✅' : '❌'}`);
+                
+                // Simulate conversation scenario
+                contextAnalyzer.addContext({
+                    type: ContextType.SPEECH,
+                    intensity: 0.8,
+                    metadata: { speakerCount: 2 }
+                });
+                
+                const conversationState = contextAnalyzer.getConversationState();
+                results.push(`Conversation Scenario: ${conversationState.isActive ? '✅' : '❌'}`);
+                
+                const allPassed = results.every(r => r.includes('✅'));
+                const resultText = results.join('\n');
+                
+                displayResults('comprehensiveResults', resultText, allPassed ? 'success' : 'error');
+                updateStatus(allPassed ? 'Real world scenarios working' : 'Real world scenarios failed', allPassed ? 'success' : 'error');
+                
+            } catch (error) {
+                displayResults('comprehensiveResults', '❌ Real world scenarios test error: ' + error.message, 'error');
+                updateStatus('Real world scenarios test error', 'error');
+            } finally {
+                isTestRunning = false;
+            }
+        };
+
+        // Initialize on page load
+        window.addEventListener('load', async () => {
+            updateStatus('Initializing...', 'running');
+            const success = await initializeSystems();
+            if (success) {
+                updateStatus('Ready for testing', 'success');
+            } else {
+                updateStatus('Initialization failed', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!--
+  Legacy Composite Sandbox
+  Load order (exact):
+    1) /legacy/mixamo/verold-runtime-0.7.15.js
+    2) /legacy/mixamo/satelliteLib-5c269fd83f94b310937d9e19eb1661440562b559.js
+    3) /legacy/mixamo/mixamo.min.1295a6f5.js
+    4) /legacy/mixamo/renderer.js
+    5) /legacy/mixamo/render-view.js
+    6) /legacy/mixamo/orbit-camera-controller.js
+    7) /legacy/mixamo/default-filters.js
+    8) /legacy/mixamo/annotation.js
+    9) /legacy/mixamo/curve.js
+   10) /legacy/mixamo/cube-map-capture.js
+   11) /legacy/mixamo/reflection-capture-plane.js
+   12) /legacy/mixamo/sphere-map-capture.js
+  Deviations: none.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Legacy Composite Sandbox</title>
+    <link rel="stylesheet" href="/legacy/mixamo/mixamo.min.383f19bc.css" />
+    <style>
+      html, body { margin: 0; padding: 0; height: 100%; background: #000; }
+      #controls-bar { z-index: 999999; }
+      #controls-bar button {
+        background: #1e1e1e;
+        color: #fff;
+        border: 1px solid #555;
+        padding: 6px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      #controls-bar button:hover { background: #2a2a2a; }
+      #controls-bar label {
+        background: #2a2a2a;
+        color: #eee;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="controls-bar" style="position:fixed;top:8px;left:8px;background:#1118;padding:8px;border-radius:6px;color:#eee;font:12px sans-serif;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <label style="display:inline-block;padding:4px 8px;background:#2a2a2a;border-radius:4px;cursor:pointer">
+        Select Model (GLB/GLTF/FBX)
+        <input id="file-input" type="file" accept=".glb,.gltf,.fbx,.bin,.jpg,.jpeg,.png,.ktx2" multiple style="display:none" />
+      </label>
+      <button id="load-default">Load Default FBX</button>
+      <button data-action="placeMarkers">Place Markers</button>
+      <button data-action="autoWeights">Auto Weights</button>
+      <button data-action="playIdle">Play Idle</button>
+      <button data-action="stop">Stop</button>
+      <button data-action="saveGlb">Save GLB</button>
+      <button data-action="clear">Clear</button>
+      <button data-action="toggleSkeleton">Show/Hide Skeleton</button>
+      <button data-action="resetMarkers">Reset Markers</button>
+    </div>
+    <iframe id="viewer-frame" src="/legacy/viewer_iframe.html" style="width:100vw;height:100vh;border:0;display:block"></iframe>
+    <div id="logs" style="position:fixed;left:8px;bottom:8px;color:#0f0;font:12px monospace"></div>
+
+    <script src="/legacy/mixamo/verold-runtime-0.7.15.js"></script>
+    <script src="/legacy/mixamo/satelliteLib-5c269fd83f94b310937d9e19eb1661440562b559.js"></script>
+    <script src="/legacy/mixamo/mixamo.min.1295a6f5.js"></script>
+    <script src="/legacy/mixamo/renderer.js"></script>
+    <script src="/legacy/mixamo/render-view.js"></script>
+    <script src="/legacy/mixamo/orbit-camera-controller.js"></script>
+    <script src="/legacy/mixamo/default-filters.js"></script>
+    <script src="/legacy/mixamo/annotation.js"></script>
+    <script src="/legacy/mixamo/curve.js"></script>
+    <script src="/legacy/mixamo/cube-map-capture.js"></script>
+    <script src="/legacy/mixamo/reflection-capture-plane.js"></script>
+    <script src="/legacy/mixamo/sphere-map-capture.js"></script>
+
+    <script>
+      (function () {
+        const logs = document.getElementById('logs');
+        function log(msg) {
+          try {
+            const line = document.createElement('div');
+            line.textContent = String(msg);
+            logs.appendChild(line);
+          } catch (e) { /* noop */ }
+          try { console.log('[sandbox]', msg); } catch (e) { /* noop */ }
+        }
+
+        log('sandbox: init');
+        const g = window;
+        log('globals: VAPI=' + (!!g.VAPI) + ', THREE=' + (!!g.THREE));
+
+        const frame = document.getElementById('viewer-frame');
+        const fileInput = document.getElementById('file-input');
+        const btnDefault = document.getElementById('load-default');
+
+        // File upload handling → send to iframe viewer
+        function sendLoadToViewer(url, name, manifest) {
+          try {
+            frame.contentWindow.postMessage({ scope: 'sandbox', type: 'loadModel', url, name, manifest }, '*');
+            log('sent to viewer: ' + (name || url));
+          } catch (e) {
+            log('postMessage failed: ' + e.message);
+          }
+        }
+        let lastBlobUrls = [];
+        function revokeLastBlobs() {
+          try { lastBlobUrls.forEach((u) => URL.revokeObjectURL(u)); } catch (_) {}
+          lastBlobUrls = [];
+        }
+        fileInput.addEventListener('change', async (ev) => {
+          const files = Array.from((ev.target.files || []));
+          if (!files.length) return;
+          revokeLastBlobs();
+          const manifest = {};
+          let root = null;
+          // Prefer GLB, then GLTF, then FBX as root
+          const MIN_SIZE = 1024; // 1KB sanity check
+          const validFiles = files.filter(f => (typeof f.size === 'number' ? f.size : MIN_SIZE) >= MIN_SIZE);
+          if (validFiles.length < files.length) {
+            const skipped = files.filter(f => !validFiles.includes(f)).map(f => `${f.name} (${f.size||0}B)`).join(', ');
+            log(`skipping tiny file(s) (<1KB): ${skipped}`);
+          }
+          const byPriority = validFiles.slice().sort((a,b)=>{
+            const ex = (fn)=> (fn.split('.').pop()||'').toLowerCase();
+            const pr = (e)=> e==='glb'?0: e==='gltf'?1: e==='fbx'?2: 9;
+            return pr(ex(a.name)) - pr(ex(b.name));
+          });
+          for (const f of validFiles) {
+            const url = URL.createObjectURL(f);
+            lastBlobUrls.push(url);
+            manifest[f.name] = url;
+          }
+          root = byPriority.find(f=>/\.(glb|gltf|fbx)$/i.test(f.name));
+          // Provide both full original names and lowercased keys in manifest to help resolution
+          const normalized = {};
+          for (const [k,v] of Object.entries(manifest)) normalized[k.toLowerCase()] = v;
+          Object.assign(manifest, normalized);
+          if (!root) { log('no supported root file selected (glb/gltf/fbx)'); return; }
+          sendLoadToViewer(manifest[root.name], root.name, manifest);
+        });
+        btnDefault.addEventListener('click', () => sendLoadToViewer('/models/Default_Model.fbx', 'Default_Model.fbx'));
+
+        // Relay UI actions to iframe (autorigger workflow)
+        Array.from(document.querySelectorAll('[data-action]')).forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const action = btn.getAttribute('data-action');
+            try {
+              frame.contentWindow.postMessage({ scope: 'sandbox', type: 'uiAction', action }, '*');
+              log('sent uiAction to viewer: ' + action);
+            } catch (e) {
+              log('postMessage failed: ' + e.message);
+            }
+            if (action === 'clear') revokeLastBlobs();
+            if (action === 'placeMarkers') {
+              // Start guided sequence each time for UX clarity
+              const labels = ['Hips','Chest','Head','LeftShoulder','LeftElbow','LeftWrist','RightShoulder','RightElbow','RightWrist','LeftKnee','LeftAnkle','RightKnee','RightAnkle'];
+              try {
+                frame.contentWindow.postMessage({ scope: 'sandbox', type: 'uiAction', action: 'startGuided', labels }, '*');
+                log('sent uiAction to viewer: startGuided');
+              } catch (_) {}
+            }
+          });
+        });
+
+        // Receive logs from iframe
+        window.addEventListener('message', (ev) => {
+          if (ev && ev.data && ev.data.type === 'iframeLog') {
+            log('[iframe] ' + ev.data.message);
+          }
+        });
+
+        // No attempt to initialize legacy viewer directly here; the iframe handles rendering with modern THREE
+      })();
+    </script>
+  </body>
+  </html>
+
+
