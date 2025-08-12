@@ -346,7 +346,11 @@ export class JawTongueSimulation {
     const speed = this.config.interpolationSpeed * deltaTime
     
     // Interpolate jaw movement
-    this.currentState.jaw.rotation.lerp(this.targetState.jaw.rotation, speed)
+    this.currentState.jaw.rotation.set(
+      THREE.MathUtils.lerp(this.currentState.jaw.rotation.x, this.targetState.jaw.rotation.x, speed),
+      THREE.MathUtils.lerp(this.currentState.jaw.rotation.y, this.targetState.jaw.rotation.y, speed),
+      THREE.MathUtils.lerp(this.currentState.jaw.rotation.z, this.targetState.jaw.rotation.z, speed)
+    )
     this.currentState.jaw.translation.lerp(this.targetState.jaw.translation, speed)
     
     // Interpolate tongue movement

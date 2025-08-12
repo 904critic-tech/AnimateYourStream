@@ -297,7 +297,7 @@ export function AnimationController({
     if (!config.enableAutoTransitions) return
 
     const currentTime = performance.now()
-    if (currentTime - lastAIUpdate.current < config.aiUpdateInterval) return
+    if (currentTime - lastAIUpdate.current < (config.aiUpdateInterval ?? 1000)) return
 
     lastAIUpdate.current = currentTime
 
@@ -343,7 +343,7 @@ export function AnimationController({
     if (!config.enableAI || !aiBehaviorEnabled || !aiBehaviorSystemRef.current) return
 
     const currentTime = performance.now()
-    if (currentTime - lastAIUpdate.current < config.aiUpdateInterval) return
+    if (currentTime - lastAIUpdate.current < (config.aiUpdateInterval ?? 1000)) return
 
     lastAIUpdate.current = currentTime
 

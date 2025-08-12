@@ -39,7 +39,11 @@ export class Agent1ComprehensiveTester {
 
   constructor() {
     this.aiSystem = new AIBehaviorSystem()
-    this.contextAnalyzer = new ContextAnalyzer()
+    this.contextAnalyzer = new ContextAnalyzer({
+      enableEnvironmentalAwareness: true,
+      enableUserInteractionTracking: true,
+      enableAudioAnalysis: true
+    })
     this.decisionEngine = new AnimationDecisionEngine()
   }
 
@@ -136,6 +140,7 @@ export class Agent1ComprehensiveTester {
     try {
       // Test context addition
       this.contextAnalyzer.addContext({
+        timestamp: Date.now(),
         type: ContextType.INTERACTION,
         intensity: 0.8,
         metadata: { target: 'test_button' }
@@ -148,13 +153,13 @@ export class Agent1ComprehensiveTester {
       }
 
       // Test audio context
-      const audioContext = this.contextAnalyzer.analyzeAudioContext(0.6, [100, 200, 300])
+      const audioContext = this.contextAnalyzer.analyzeAudioContext(0.6, 200)
       if (!audioContext) {
         errors.push('Audio context analysis failed')
       }
 
       // Test interaction context
-      const interactionContext = this.contextAnalyzer.analyzeInteractionContext('click', 'test_element', 500)
+      const interactionContext = this.contextAnalyzer.analyzeInteractionContext('click', 0.8)
       if (!interactionContext) {
         errors.push('Interaction context analysis failed')
       }

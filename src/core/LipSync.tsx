@@ -416,19 +416,23 @@ export const LipSync: React.FC<LipSyncProps> = ({
 
   // Update performance metrics
   const updatePerformanceMetrics = useCallback((currentTime: number) => {
-    // Only update performance metrics every 60 frames (about once per second at 60fps)
     if (frameCountRef.current % 60 !== 0) return
     
     const metrics: PerformanceMetrics = {
+      audioToVisemeLatency: lipSyncState.processingLatency,
+      visemeToAnimationLatency: 0,
+      totalLatency: lipSyncState.processingLatency,
       frameRate: lipSyncState.frameRate,
-      processingLatency: lipSyncState.processingLatency,
-      droppedFrames: droppedFramesRef.current,
-      audioLevel: lipSyncState.latestAudioLevel,
-      isActive: lipSyncState.isActive
+      averageConfidence: 0,
+      missedFrames: droppedFramesRef.current,
+      incorrectDetections: 0,
+      cpuUsage: 0,
+      memoryUsage: 0,
+      audioBufferUnderruns: 0
     }
 
     onPerformanceUpdate?.(metrics)
-  }, [lipSyncState.frameRate, onPerformanceUpdate])
+  }, [lipSyncState.frameRate, lipSyncState.processingLatency, onPerformanceUpdate])
 
   // Start lip sync
   const startLipSync = useCallback(() => {

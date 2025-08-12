@@ -143,11 +143,11 @@ export class AIBehaviorSystem {
    * Add a context event (user interaction, audio input, etc.)
    */
   addContext(context: Omit<Context, 'timestamp'>): void {
-    this.contextAnalyzer.addContext(context)
+    const ctx: Context = { ...context, timestamp: Date.now() }
+    this.contextAnalyzer.addContext(ctx)
     this.state.lastInteractionTime = Date.now()
 
-    // Reset idle timer on interaction
-    if (context.type === ContextType.INTERACTION) {
+    if (ctx.type === ContextType.INTERACTION) {
       this.state.idleStartTime = Date.now()
     }
   }
@@ -155,7 +155,7 @@ export class AIBehaviorSystem {
   /**
    * Add audio context from microphone input
    */
-  addAudioContext(audioLevel: number, frequency?: number[]): void {
+  addAudioContext(audioLevel: number, frequency?: number): void {
     this.contextAnalyzer.analyzeAudioContext(audioLevel, frequency)
     this.state.lastInteractionTime = Date.now()
   }
@@ -170,8 +170,7 @@ export class AIBehaviorSystem {
   ): void {
     const interactionContext = this.contextAnalyzer.analyzeInteractionContext(
       interactionType,
-      target,
-      duration
+      duration ?? 0.5
     )
     this.addContext(interactionContext)
   }
@@ -187,17 +186,17 @@ export class AIBehaviorSystem {
     const analysis = this.contextAnalyzer.analyzeCurrentContext()
     
     const decision = this.decisionEngine.makeDecision(
-      analysis.primaryContext as any,
+      analysis.primaryContext,
       analysis.intensity,
       analysis.confidence,
-      analysis.activeContexts as any,
+      analysis.activeContexts,
       availableAnimations
     )
 
     if (decision) {
       this.executeAnimationDecision(decision, analysis.intensity)
-      this.recordInteraction(analysis.primaryContext as any, decision.animation)
-      this.updateEmotionalMemory(analysis.primaryContext as any, analysis.intensity)
+      this.recordInteraction(analysis.primaryContext, decision.animation)
+      this.updateEmotionalMemory(analysis.primaryContext, analysis.intensity)
     }
 
     return decision
