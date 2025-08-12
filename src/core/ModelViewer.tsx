@@ -18,6 +18,8 @@ function CharacterLoader({
 }: { 
   onModelLoaded?: (model: Group, animations: AnimationClip[], mixer: AnimationMixer | null) => void 
 }) {
+  const isDev = import.meta.env.DEV
+  const debugLog = (...args: any[]) => { if (isDev) console.log(...args) }
   const groupRef = useRef<Group>(null!)
   // Access WebGL renderer context for decoder support detection
   const { gl } = useThree()
@@ -813,16 +815,13 @@ function CharacterLoader({
   
   // Success state - return the loaded FBX model
   if (characterLoaded && loadedModel) {
-    console.log('⚡ Agent 2: Rendering loaded model:', loadedModel)
-    console.log('⚡ Agent 2: Model type:', loadedModel.type)
-    console.log('⚡ Agent 2: Model children:', loadedModel.children.length)
+    debugLog('⚡ Agent 2: Rendering loaded model:', loadedModel)
+    debugLog('⚡ Agent 2: Model type:', loadedModel.type)
+    debugLog('⚡ Agent 2: Model children:', loadedModel.children.length)
     
     return (
       <primitive 
-        object={loadedModel} 
-        onUpdate={(self: any) => {
-          console.log('⚡ Agent 2: Model primitive updated:', self)
-        }}
+        object={loadedModel}
       />
     )
   }
