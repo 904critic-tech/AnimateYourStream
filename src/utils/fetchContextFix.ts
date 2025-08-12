@@ -35,11 +35,11 @@ export function createBoundFetch(): typeof fetch {
 /**
  * Wraps a loader with fetch context protection
  */
-export function wrapLoaderWithFetchFix<T extends any>(
+export function wrapLoaderWithFetchFix<T extends object>(
   LoaderClass: new () => T,
   fetchFix: typeof fetch = createBoundFetch()
 ): T {
-  const loader = new LoaderClass()
+  const loader: T = new LoaderClass()
   
   // Store original fetch
   const originalFetch = (globalThis as any).fetch
@@ -48,14 +48,15 @@ export function wrapLoaderWithFetchFix<T extends any>(
   ;(globalThis as any).fetch = fetchFix
   
   // Return a proxy that restores fetch when loader is done
-  return new Proxy(loader, {
-    get(target, prop) {
-      const value = target[prop as keyof T]
+  const handler: ProxyHandler<T> = {
+    get(target, prop, receiver) {
+      const value = Reflect.get(target, prop, receiver) as unknown
       
       if (typeof value === 'function') {
-        return function(...args: any[]) {
+        return function(this: unknown, ...args: any[]) {
           try {
-            const result = value.apply(target, args)
+            const fn = value as unknown as (...a: any[]) => any
+            const result = fn.apply(target as unknown as object, args)
             
             // If it's a promise (like load method), restore fetch when done
             if (result && typeof result.then === 'function') {
@@ -73,15 +74,16 @@ export function wrapLoaderWithFetchFix<T extends any>(
         }
       }
       
-      return value
+      return value as T[keyof T]
     }
-  })
+  }
+  return new Proxy<T>(loader, handler)
 }
 
 /**
  * Creates a safe loader factory that handles fetch context issues
  */
-export function createSafeLoader<T extends any>(
+export function createSafeLoader<T extends object>(
   LoaderClass: new () => T
 ): () => T {
   return () => wrapLoaderWithFetchFix(LoaderClass)
