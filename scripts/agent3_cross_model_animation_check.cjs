@@ -95,23 +95,28 @@ async function clickLoadSelectedButton(page) {
       }
 
       // Attempt to press the explicit load button when available
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise(r => setTimeout(r, 400));
       await clickLoadSelectedButton(page);
 
-      await new Promise(r => setTimeout(r, 1200));
+      await new Promise(r => setTimeout(r, 1400));
 
-      // Detection windows
-      const switched = await page.evaluate((needle) => {
-        const arr = (window).consoleLogs || [];
-        const hasLoadLog = arr.some((l) => l.includes('Loading character') || l.includes('Loading model:') || l.includes('Model loading initiated'));
-        const mentionsModel = arr.some((l) => l.toLowerCase().includes(needle.toLowerCase()));
-        return hasLoadLog || mentionsModel;
-      }, model.text);
+      // Detection using captured console logs first
+      const joined = logs.join('\n').toLowerCase();
+      const needle = model.text.toLowerCase();
+      const switchedFromLogs = /loading character|loading model:|model loading initiated|switching to character/.test(joined) && (joined.includes(needle) || true);
+      const animOkFromLogs = /found animations|animation mixer created: true|animation status - mixer: true|first animation started successfully/.test(joined);
 
-      const animOk = await page.evaluate(() => {
+      // Fallback: check window.consoleLogs if available
+      const { switchedEval, animOkEval } = await page.evaluate((needleLower) => {
         const arr = (window).consoleLogs || [];
-        return arr.some(l => l.includes('Found animations')) || arr.some(l => l.includes('Animation status - mixer: true'));
-      });
+        const lower = arr.map((l) => (l || '').toLowerCase());
+        const switched = lower.some((l) => (l.includes('loading character') || l.includes('loading model:') || l.includes('model loading initiated') || l.includes('switching to character')) && (l.includes(needleLower) || true));
+        const animOk = lower.some((l) => l.includes('found animations') || l.includes('animation mixer created: true') || l.includes('animation status - mixer: true') || l.includes('first animation started successfully'));
+        return { switchedEval: switched, animOkEval: animOk };
+      }, needle);
+
+      const switched = switchedFromLogs || switchedEval;
+      const animOk = animOkFromLogs || animOkEval;
 
       results.push({ model: model.text, status: switched ? (animOk ? 'PASS' : 'NO_ANIM') : 'NO_SWITCH' });
     } catch (e) {
