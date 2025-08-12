@@ -97,6 +97,15 @@
 
 ## Previous Entries
 
+### 2025-08-12 18:46 - Agent 2 Dev Server + Tests
+- **Agent:** Agent 2 (Performance Team)
+- **Server:** Started Vite dev server on port 3001 (HTTP 200 probe ~0.15s)
+- **Tests Executed:**
+  - `scripts/testFetchContextFix.cjs` → ✅ PASS (no fetch errors; Model Viewer present)
+  - `scripts/test_character_switching_puppeteer.cjs` → ✅ PASS (HTTP 200; candidates=36; switchDetected=true)
+  - `scripts/testFBXLoading.cjs` → ✅ PASS (memory monitoring integrated; all checks passed)
+- **Notes:** Safe loader + fetch-context fixes validated; memory/perf metrics exposed to UI/tests.
+
 ### 2025-08-12 18:40 - Coordinator Git Sync (Docs Only)
 - **Agent:** Coordinator
 - **Action:** Staged, committed, and pushed coordination documentation updates
