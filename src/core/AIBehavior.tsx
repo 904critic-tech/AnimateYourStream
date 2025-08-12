@@ -14,7 +14,7 @@ import { AIBehaviorSystem } from '../ai/AIBehaviorSystem'
 import { AnimationDecisionEngine } from '../ai/AnimationDecisionEngine'
 import { ContextAnalyzer } from '../ai/ContextAnalyzer'
 import { PersonalityEngine } from '../ai/PersonalityEngine'
-import { PersonalitySystem } from './PersonalitySystem'
+import { PersonalitySystem, PersonalityPresetId } from './PersonalitySystem'
 import { EnvironmentAwareness } from './EnvironmentAwareness'
 import { BehaviorTree, SelectorNode, SequenceNode, ActionNode } from './AIBehaviorTree'
 
@@ -359,28 +359,26 @@ export function AIBehavior({
   // Keep personality preset in sync with store
   useEffect(() => {
     if (!personalitySystemRef.current) return
-    const presetMap: Record<string, PersonalityType | undefined> = {
-      friendly: PersonalityType.FRIENDLY,
-      shy: PersonalityType.SHY,
-      excited: PersonalityType.EXCITED,
-      calm: PersonalityType.CALM,
-      playful: PersonalityType.PLAYFUL,
-      serious: PersonalityType.SERIOUS,
-      curious: PersonalityType.CURIOUS,
-      confident: PersonalityType.CONFIDENT,
-      energetic: PersonalityType.EXCITED,
-      balanced: PersonalityType.CALM,
-      creative: PersonalityType.PLAYFUL,
-      conservative: PersonalityType.SERIOUS
+    const presetMap: Record<string, PersonalityPresetId | undefined> = {
+      friendly: PersonalityPresetId.Friendly,
+      shy: PersonalityPresetId.Shy,
+      excited: PersonalityPresetId.Excited,
+      calm: PersonalityPresetId.Calm,
+      playful: PersonalityPresetId.Playful,
+      serious: PersonalityPresetId.Serious,
+      curious: PersonalityPresetId.Curious,
+      confident: PersonalityPresetId.Confident,
+      energetic: PersonalityPresetId.Excited,
+      balanced: PersonalityPresetId.Calm,
+      creative: PersonalityPresetId.Playful,
+      conservative: PersonalityPresetId.Serious
     }
     const mapped = presetMap[aiPersonalityPreset]
     if (mapped) {
-      // PersonalitySystem uses its own enum; map by name
       try {
-        // @ts-ignore access to internal setter via matching enum name
-        personalitySystemRef.current.setPreset(mapped.toLowerCase?.() || mapped)
+        personalitySystemRef.current.setPreset(mapped)
       } catch {
-        // fallback: ignore
+        // ignore
       }
     }
   }, [aiPersonalityPreset])
