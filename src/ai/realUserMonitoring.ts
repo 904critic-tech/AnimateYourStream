@@ -103,7 +103,11 @@ export class RealUserMonitoring {
 
   constructor(config: MonitoringConfig) {
     this.aiSystem = new AIBehaviorSystem();
-    this.contextAnalyzer = new ContextAnalyzer();
+    this.contextAnalyzer = new ContextAnalyzer({
+      enableEnvironmentalAwareness: true,
+      enableUserInteractionTracking: true,
+      enableAudioAnalysis: true
+    });
     this.config = config;
     this.analytics = this.initializeAnalytics();
   }

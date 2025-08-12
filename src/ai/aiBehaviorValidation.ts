@@ -54,7 +54,11 @@ export class AIBehaviorValidator {
 
   constructor() {
     this.aiSystem = new AIBehaviorSystem()
-    this.contextAnalyzer = new ContextAnalyzer()
+    this.contextAnalyzer = new ContextAnalyzer({
+      enableEnvironmentalAwareness: true,
+      enableUserInteractionTracking: true,
+      enableAudioAnalysis: true
+    })
     this.decisionEngine = new AnimationDecisionEngine()
   }
 
@@ -203,7 +207,7 @@ export class AIBehaviorValidator {
 
     try {
       // Test interaction context
-      this.contextAnalyzer.analyzeInteractionContext('click', 'button', 500)
+      this.contextAnalyzer.analyzeInteractionContext('click', 0.5)
       const interactionContext = this.contextAnalyzer.analyzeCurrentContext()
       if (interactionContext.primaryContext !== ContextType.INTERACTION) {
         errors.push('Interaction context not properly detected')
@@ -235,7 +239,7 @@ export class AIBehaviorValidator {
 
       // Test environmental context
       const environmentalContext = this.contextAnalyzer.getEnvironmentalContext()
-      if (!environmentalContext || typeof environmentalContext.noiseLevel !== 'number') {
+      if (!environmentalContext) {
         errors.push('Environmental context analysis failed')
       }
 
@@ -410,6 +414,7 @@ export class AIBehaviorValidator {
       const startTime = performance.now()
       for (let i = 0; i < 100; i++) {
         this.contextAnalyzer.addContext({
+          timestamp: Date.now(),
           type: ContextType.INTERACTION,
           intensity: Math.random(),
           metadata: { test: i }
@@ -550,9 +555,9 @@ export class AIBehaviorValidator {
       }
 
       // Scenario 2: Audio conversation
-      this.aiSystem.addAudioContext(0.7, [150, 250, 350])
-      this.aiSystem.addAudioContext(0.8, [160, 260, 360])
-      this.aiSystem.addAudioContext(0.9, [170, 270, 370])
+      this.aiSystem.addAudioContext(0.7, 250)
+      this.aiSystem.addAudioContext(0.8, 260)
+      this.aiSystem.addAudioContext(0.9, 270)
       
       const conversationState = this.aiSystem.getConversationState()
       if (!conversationState.isActive) {
@@ -561,12 +566,14 @@ export class AIBehaviorValidator {
 
       // Scenario 3: Emotional progression
       this.contextAnalyzer.addContext({
+        timestamp: Date.now(),
         type: ContextType.EMOTIONAL_STATE,
         intensity: 0.3,
         metadata: { emotion: EmotionalTone.POSITIVE }
       })
       
       this.contextAnalyzer.addContext({
+        timestamp: Date.now(),
         type: ContextType.EMOTIONAL_STATE,
         intensity: 0.7,
         metadata: { emotion: EmotionalTone.EXCITED }

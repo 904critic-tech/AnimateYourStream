@@ -200,12 +200,7 @@ export function AnimationController({
 
     // Initialize AI behavior system if enabled
     if (config.enableAI && aiBehaviorEnabled) {
-      aiBehaviorSystemRef.current = new AIBehaviorSystem({
-        enablePersonality: true,
-        enableEmotionTracking: true,
-        enableContextAnalysis: true,
-        enableLearning: true
-      })
+      aiBehaviorSystemRef.current = new AIBehaviorSystem()
       
       // Optional: integration omitted
     }

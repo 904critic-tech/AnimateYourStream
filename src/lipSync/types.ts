@@ -156,6 +156,7 @@ export interface LipSyncAnimation {
   startTime: number
   isLooping: boolean
   synchronizeWithBody?: boolean // Whether to sync with body animation timing
+  targetShape?: MouthShape
 }
 
 // Machine learning types (for advanced viseme detection)

@@ -358,7 +358,7 @@ export class Agent1AIBehaviorTester {
     const test4 = this.runTest('Interaction Recording', () => {
       // Add some interactions to test recording
       this.aiSystem.addInteractionContext('click', 'button', 500)
-      this.aiSystem.addAudioContext(0.6, [200, 300])
+      this.aiSystem.addAudioContext(0.6, 250)
       const stats = this.aiSystem.getLearningStats()
       return stats.interactionCount > 0
     })

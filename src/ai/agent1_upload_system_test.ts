@@ -407,7 +407,8 @@ class UploadSystemTester {
 }
 
 // Export for use in other tests
-export { UploadSystemTester, UploadSystemTestResult }
+export type { UploadSystemTestResult }
+export { UploadSystemTester }
 
 // Run tests if this file is executed directly
 if (typeof window !== 'undefined') {

@@ -139,7 +139,7 @@ export class AIBehaviorIntegrationTester {
       this.aiSystem.addInteractionContext('click', 'test_button', 500)
       
       // Test audio context
-      this.aiSystem.addAudioContext(0.7, [150, 250, 350])
+      this.aiSystem.addAudioContext(0.7, 250)
 
       // Verify context analysis
       const behaviorState = this.aiSystem.getBehaviorState()
@@ -330,7 +330,7 @@ export class AIBehaviorIntegrationTester {
       // Simulate rapid interactions
       for (let i = 0; i < 20; i++) {
         this.aiSystem.addInteractionContext('click', `button_${i}`, 100)
-        this.aiSystem.addAudioContext(0.5 + Math.random() * 0.3, [100, 200, 300])
+        this.aiSystem.addAudioContext(0.5 + Math.random() * 0.3, 200)
       }
 
       const interactionTime = performance.now() - startTime

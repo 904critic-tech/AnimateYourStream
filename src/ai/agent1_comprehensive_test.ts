@@ -431,6 +431,7 @@ export class Agent1ComprehensiveTester {
       // Test null context analysis
       try {
         this.contextAnalyzer.addContext({
+          timestamp: Date.now(),
           type: ContextType.IDLE,
           intensity: -1, // Invalid intensity
           metadata: {}

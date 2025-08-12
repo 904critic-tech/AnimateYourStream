@@ -177,8 +177,8 @@ export const LipSync: React.FC<LipSyncProps> = ({
     console.log('🎭 Agent 4 - Facial rig initialized:', {
       hasJawBone: !!jawBone,
       hasBlendShapeMesh: !!blendShapeMesh,
-      jawBoneName: jawBone?.name || 'none',
-      blendShapeMeshName: blendShapeMesh?.name || 'none'
+      jawBoneName: (jawBone as any)?.name || 'none',
+      blendShapeMeshName: (blendShapeMesh as any)?.name || 'none'
     })
   }, [modelRef?.current, aiExpressionSystem])
 
@@ -275,12 +275,11 @@ export const LipSync: React.FC<LipSyncProps> = ({
     })
     
     if (headBone) {
-      // Apply basic jaw movement based on audio level
-      const jawRotation = Math.min(audioLevel * 0.3, 0.2) // Max 0.2 radians (~11 degrees)
-      if (headBone.rotation) {
-        headBone.rotation.x = jawRotation
+      const hb = headBone as THREE.Bone
+      const jawRotation = Math.min(audioLevel * 0.3, 0.2)
+      if (hb.rotation) {
+        hb.rotation.x = jawRotation
       }
-      
       console.log('🎭 Agent 4 - Applied basic lip sync:', { audioLevel, jawRotation })
     }
   }, [modelRef?.current])
@@ -344,19 +343,16 @@ export const LipSync: React.FC<LipSyncProps> = ({
     interpolationTRef.current += delta / currentAnimation.duration
 
     if (interpolationTRef.current >= 1.0) {
-      // Animation complete, remove from queue
       animationQueueRef.current.shift()
       interpolationTRef.current = 0
-      
       if (animationQueueRef.current.length > 0) {
-        targetMouthShapeRef.current = animationQueueRef.current[0].targetShape
+        const next = animationQueueRef.current[0]
+        targetMouthShapeRef.current = (next as any).targetShape || lipSyncState.currentMouthShape
       }
     } else {
-      // Interpolate between shapes
       const t = interpolationTRef.current
       const currentShape = lipSyncState.currentMouthShape
-      const targetShape = targetMouthShapeRef.current
-
+      const targetShape = targetMouthShapeRef.current || lipSyncState.currentMouthShape
       const interpolatedShape = interpolateMouthShapes(currentShape, targetShape, t)
       setLipSyncState(prev => ({ ...prev, currentMouthShape: interpolatedShape }))
     }
@@ -368,11 +364,11 @@ export const LipSync: React.FC<LipSyncProps> = ({
     phonemeMappingSystem.update(delta)
     
     // Update jaw and tongue simulation
-    jawTongueSimulation.update(delta)
+    jawTongueSimulation.update(lipSyncState.currentMouthShape, lipSyncState.currentViseme as string, delta)
     
     // Update expression blending
     expressionBlending.update(delta)
-  }, [])
+  }, [lipSyncState.currentMouthShape, lipSyncState.currentViseme])
 
   // Apply mouth shape to model
   const applyMouthShapeToModel = useCallback(() => {
@@ -396,17 +392,15 @@ export const LipSync: React.FC<LipSyncProps> = ({
     if (blendShapeMeshRef.current && blendShapeMeshRef.current.morphTargetDictionary) {
       const morphTargetDictionary = blendShapeMeshRef.current.morphTargetDictionary
       const morphTargetInfluences = blendShapeMeshRef.current.morphTargetInfluences
-
+      if (!morphTargetInfluences) return
       // Apply mouth openness
       if (morphTargetDictionary.mouthOpen !== undefined) {
         morphTargetInfluences[morphTargetDictionary.mouthOpen] = mouthShape.openness
       }
-
       // Apply lip compression
       if (morphTargetDictionary.lipCompress !== undefined) {
         morphTargetInfluences[morphTargetDictionary.lipCompress] = mouthShape.lipCompression
       }
-
       // Apply corner pull
       if (morphTargetDictionary.cornerPull !== undefined) {
         morphTargetInfluences[morphTargetDictionary.cornerPull] = mouthShape.cornerPull

@@ -56,7 +56,11 @@ export class ProductionAIValidator {
 
   constructor() {
     this.aiSystem = new AIBehaviorSystem();
-    this.contextAnalyzer = new ContextAnalyzer();
+    this.contextAnalyzer = new ContextAnalyzer({
+      enableEnvironmentalAwareness: true,
+      enableUserInteractionTracking: true,
+      enableAudioAnalysis: true
+    });
   }
 
   /**

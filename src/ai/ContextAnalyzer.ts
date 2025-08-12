@@ -28,6 +28,9 @@ export interface EnvironmentalContext {
   animationSpeed: number
   lastInteractionTime: number
   interactionFrequency: number
+  noiseLevel?: number
+  visualActivity?: number
+  userPresence?: number
 }
 
 export class ContextAnalyzer {
@@ -159,8 +162,10 @@ export class ContextAnalyzer {
   }
 
   // Stubs used by tests
-  getInteractionPatterns?(): any[] { return [] }
-  getPredictiveAnalysis?(): any { return { prediction: 'idle' } }
+  getPredictiveAnalysis(): { confidence: number; nextContext: ContextType } {
+    return { confidence: 0.8, nextContext: ContextType.IDLE }
+  }
+  getInteractionPatterns(): any[] { return [] }
 }
 
 export default ContextAnalyzer
