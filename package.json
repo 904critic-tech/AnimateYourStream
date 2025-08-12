@@ -28,7 +28,8 @@
     "agent:watch:typecheck": "tsc --noEmit --watch",
     "agent:monitor:builder": "node scripts/server/ping_builder_health.cjs",
     "agents:start": "concurrently -n lint,typecheck,builder -c yellow,cyan,magenta \"npm:agent:watch:lint\" \"npm:agent:watch:typecheck\" \"npm:agent:monitor:builder\"",
-    "vercel-build": "vite build"
+    "vercel-build": "vite build",
+    "agent3:suite": "node scripts/run_agent3_suite.cjs"
   },
   "bin": {},
   "scriptsExt": {},
