@@ -23,21 +23,25 @@ const puppeteer = require('puppeteer')
     const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
     const status = resp ? resp.status() : 0
 
-    // Wait for the heading text to appear
-    const headingFound = await page.evaluate(() => {
-      const h1s = Array.from(document.querySelectorAll('h1'))
-      return h1s.some(h => h.textContent && h.textContent.includes('Agent 4 - Microphone Diagnostic'))
-    })
+    // Wait up to 10s for React to render the heading
+    try {
+      await page.waitForFunction(() => {
+        const h1s = Array.from(document.querySelectorAll('h1'))
+        return h1s.some(h => h.textContent && h.textContent.includes('Microphone Diagnostic'))
+      }, { timeout: 10000 })
+    } catch {}
 
     // Collect basic console errors
     const jsErrors = []
     page.on('pageerror', (err) => jsErrors.push(String(err)))
 
-    // Try to read the audio level text if present
-    const audioLevelText = await page.evaluate(() => {
+    // Evaluate page content
+    const { headingFound, audioLevelText } = await page.evaluate(() => {
+      const h1s = Array.from(document.querySelectorAll('h1'))
+      const found = h1s.some(h => h.textContent && h.textContent.includes('Agent 4 - Microphone Diagnostic'))
       const spans = Array.from(document.querySelectorAll('span, div'))
       const level = spans.find(el => el.textContent && /Current Audio Level:/i.test(el.textContent))
-      return level ? level.textContent : null
+      return { headingFound: found, audioLevelText: level ? level.textContent : null }
     })
 
     const result = {
