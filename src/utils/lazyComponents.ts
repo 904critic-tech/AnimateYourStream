@@ -10,7 +10,7 @@ import React, { lazy } from 'react'
 // Lazy load performance dashboard (only load when opened)
 export const LazyPerformanceDashboard = lazy(() => 
   import('../components/UI/PerformanceDashboard').then(module => ({
-    default: module.default
+    default: module.PerformanceDashboard
   }))
 )
 
