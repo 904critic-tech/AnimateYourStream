@@ -1,7 +1,7 @@
 {
-  "name": "mixamo-model-viewer",
+  "name": "character-animation-viewer",
   "version": "1.0.0",
-  "description": "Advanced 3D Model Viewer with AI-powered features, lip sync, and Mixamo-style interface",
+  "description": "Advanced 3D Model Viewer with AI-powered features, lip sync, and modern character animation interface",
   "type": "module",
   "scripts": {
     "dev": "vite",

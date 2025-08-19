@@ -1,10 +1,10 @@
-# 🎯 Mixamo Model Viewer - AI Enhanced
+# 🎯 Character Animation Model Viewer - AI Enhanced
 
-An advanced 3D model viewer that replicates Mixamo's interface with cutting-edge AI features including real-time lip sync, intelligent animation triggers, and comprehensive error reporting.
+An advanced 3D model viewer that replicates modern character animation interfaces with cutting-edge AI features including real-time lip sync, intelligent animation triggers, and comprehensive error reporting.
 
 ## ✨ Features
 
-- **🎨 Exact Mixamo Interface**: Pixel-perfect replica of Mixamo's web interface
+- **🎨 Modern Character Interface**: Pixel-perfect replica of professional character animation interfaces
 - **🎤 Real-time Lip Sync**: Microphone input drives facial animations
 - **🤖 AI Behavior System**: Intelligent animation triggers based on context
 - **🔍 Smart Error Reporting**: AI-powered diagnostics and monitoring
